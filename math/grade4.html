@@ -1,0 +1,929 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Math Master: 3x2 挑战</title>
+    <style>
+      :root {
+        --primary: #4f46e5;
+        --primary-dark: #4338ca;
+        --bg: #f3f4f6;
+        --surface: #ffffff;
+        --text: #1f2937;
+        --text-light: #6b7280;
+        --success: #10b981;
+        --error: #ef4444;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", system-ui, sans-serif;
+      }
+
+      body {
+            background-color: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            background: var(--surface);
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container.narrow {
+            max-width: 500px;
+            height: auto;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2rem;
+        margin-bottom: 10px;
+        color: var(--primary);
+      }
+
+      .subtitle {
+        color: var(--text-light);
+        margin-bottom: 30px;
+      }
+
+      /* Screens */
+      .screen {
+        display: none;
+        width: 100%;
+        height: 100%;
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      .screen.active {
+        display: block;
+      }
+
+      /* Center content for Start/Result screens */
+      #start-screen, #result-screen {
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      
+      #start-screen.active, #result-screen.active {
+        display: flex;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Difficulty Selector */
+        .difficulty-section {
+            margin-bottom: 30px;
+            width: 100%;
+        }
+
+        .section-label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .difficulty-btns {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .diff-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-light);
+            transition: all 0.2s;
+        }
+
+        .diff-btn.active {
+            border-color: var(--primary);
+            background: #eef2ff;
+            color: var(--primary);
+        }
+
+        .diff-btn:hover:not(.active) {
+            border-color: #d1d5db;
+        }
+
+        /* Menu */
+      .mode-btn {
+        display: block;
+        width: 100%;
+        padding: 16px;
+        margin-bottom: 12px;
+        border: 2px solid #e5e7eb;
+        background: transparent;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .mode-btn:hover {
+        border-color: var(--primary);
+        background: #eef2ff;
+        color: var(--primary);
+      }
+
+      /* Game UI */
+        .game-layout {
+            display: flex;
+            gap: 20px;
+            align-items: stretch;
+            text-align: left;
+            height: 100%;
+        }
+
+        .game-main {
+            flex: 1;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .game-scratchpad {
+            flex: 1;
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 16px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            position: relative;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .game-scratchpad.maximized {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 0;
+            background: #ffffff;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .scratch-toolbar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 0 5px;
+        }
+
+        .tool-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 5px;
+            border-radius: 8px;
+            color: var(--text-light);
+            transition: all 0.2s;
+        }
+
+        .tool-btn:hover, .tool-btn.active {
+            background: #e2e8f0;
+            color: var(--primary);
+        }
+
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            cursor: crosshair;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        textarea.scratch-text {
+            width: 100%;
+            height: 100%;
+            border: none;
+            resize: none;
+            padding: 15px;
+            font-size: 1.2rem;
+            font-family: monospace;
+            background: white;
+            border-radius: 12px;
+            outline: none;
+            display: none;
+        }
+
+        textarea.scratch-text.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .game-layout {
+                flex-direction: column;
+            }
+            .game-scratchpad {
+                width: 100%;
+                height: 300px;
+            }
+        }
+
+        .stats-bar {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        font-size: 0.9rem;
+        color: var(--text-light);
+        font-weight: 600;
+      }
+
+      .timer-bar-bg {
+        height: 6px;
+        background: #e5e7eb;
+        border-radius: 3px;
+        margin-bottom: 30px;
+        overflow: hidden;
+      }
+
+      .timer-bar-fill {
+        height: 100%;
+        background: var(--primary);
+        width: 100%;
+        transition: width 1s linear;
+      }
+
+      .problem-box {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 30px;
+        font-feature-settings: "tnum";
+        font-variant-numeric: tabular-nums;
+      }
+
+      .input-wrapper {
+        position: relative;
+        max-width: 200px;
+        margin: 0 auto 30px;
+      }
+
+      input[type="number"] {
+        width: 100%;
+        font-size: 2rem;
+        padding: 12px;
+        text-align: center;
+        border: 3px solid #e5e7eb;
+        border-radius: 12px;
+        outline: none;
+        transition: border-color 0.2s;
+        -moz-appearance: textfield;
+      }
+
+      input[type="number"]::-webkit-outer-spin-button,
+      input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      input[type="number"]:focus {
+        border-color: var(--primary);
+      }
+
+      .submit-btn {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 16px 32px;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+        width: 100%;
+      }
+
+      .submit-btn:hover {
+        background: var(--primary-dark);
+      }
+
+      /* Feedback Animation */
+      .correct-anim {
+        animation: pulse-green 0.4s ease-out;
+      }
+
+      .wrong-anim {
+        animation: shake-red 0.4s ease-in-out;
+      }
+
+      @keyframes pulse-green {
+        0% {
+          box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+          border-color: var(--success);
+        }
+        70% {
+          box-shadow: 0 0 0 20px rgba(16, 185, 129, 0);
+          border-color: var(--success);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        }
+      }
+
+      @keyframes shake-red {
+        0%,
+        100% {
+          transform: translateX(0);
+          border-color: var(--error);
+        }
+        25% {
+          transform: translateX(-10px);
+        }
+        75% {
+          transform: translateX(10px);
+        }
+      }
+
+      /* Result Screen */
+      .score-display {
+        font-size: 4rem;
+        font-weight: 800;
+        color: var(--primary);
+        margin-bottom: 10px;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 30px;
+      }
+
+      .stat-item {
+        background: #f9fafb;
+        padding: 15px;
+        border-radius: 12px;
+      }
+
+      .stat-label {
+        font-size: 0.8rem;
+        color: var(--text-light);
+        margin-bottom: 4px;
+      }
+
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container narrow" id="main-container">
+      <!-- Start Screen -->
+      <div id="start-screen" class="screen active">
+        <h1>🔢 Math Master</h1>
+        <p class="subtitle">3位 x 2位 & 3位 ÷ 2位 专项训练</p>
+        
+        <div class="difficulty-section">
+            <div class="section-label">选择难度</div>
+            <div class="difficulty-btns">
+                <button class="diff-btn active" onclick="setDifficulty(360, this)">简单<br><span style="font-size:0.8em">6分钟</span></button>
+                <button class="diff-btn" onclick="setDifficulty(240, this)">中等<br><span style="font-size:0.8em">4分钟</span></button>
+                <button class="diff-btn" onclick="setDifficulty(120, this)">困难<br><span style="font-size:0.8em">2分钟</span></button>
+            </div>
+        </div>
+
+        <div class="section-label">开始挑战</div>
+        <button class="mode-btn" onclick="startGame('multiplication')">
+          ✖️ 乘法训练
+        </button>
+        <button class="mode-btn" onclick="startGame('division')">
+          ➗ 除法训练
+        </button>
+        <button class="mode-btn" onclick="startGame('mixed')">
+          🔀 混合挑战
+        </button>
+      </div>
+
+      <!-- Game Screen -->
+      <div id="game-screen" class="screen">
+        <div class="game-layout">
+          <div class="game-main">
+            <div class="stats-bar">
+              <span id="score-el">得分: 0</span>
+              <span id="streak-el">连击: 0</span>
+            </div>
+            <div class="timer-bar-bg">
+              <div id="timer-bar" class="timer-bar-fill"></div>
+            </div>
+
+            <div id="problem" class="problem-box">123 × 45</div>
+
+            <div class="input-wrapper">
+              <input
+                type="number"
+                id="answer-input"
+                placeholder="?"
+                autocomplete="off"
+              />
+            </div>
+
+            <button class="submit-btn" onclick="checkAnswer()">提交 (Enter)</button>
+          </div>
+
+          <div class="game-scratchpad" id="scratchpad">
+            <div class="scratch-toolbar">
+              <div style="display: flex; gap: 5px;">
+                <button class="tool-btn active" id="btn-draw" onclick="setScratchMode('draw')" title="画笔">✏️</button>
+                <button class="tool-btn" id="btn-eraser" onclick="setScratchMode('eraser')" title="橡皮擦">🧽</button>
+                <button class="tool-btn" id="btn-text" onclick="setScratchMode('text')" title="键盘">⌨️</button>
+              </div>
+              <div style="display: flex; gap: 5px;">
+                  <button class="tool-btn" onclick="toggleMaximize()" title="最大化/还原" id="btn-maximize">⤢</button>
+                  <button class="tool-btn" onclick="clearScratchpad()" title="清除">🗑️</button>
+              </div>
+            </div>
+            <div class="canvas-container">
+              <canvas id="scratch-canvas"></canvas>
+              <textarea id="scratch-text" class="scratch-text" placeholder="在此输入计算过程..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result Screen -->
+      <div id="result-screen" class="screen">
+        <h1>时间到!</h1>
+        <p class="subtitle">本次练习成绩</p>
+
+        <div class="score-display" id="final-score">0</div>
+
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-label">答对题目</div>
+            <div class="stat-value" id="correct-count">0</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">准确率</div>
+            <div class="stat-value" id="accuracy">0%</div>
+          </div>
+        </div>
+
+        <button class="submit-btn" onclick="showStartScreen()">再玩一次</button>
+      </div>
+    </div>
+
+    <script>
+      // Game State
+      let currentMode = "mixed";
+      let initialTime = 360; // Default Simple
+      let score = 0;
+      let streak = 0;
+      let timeLeft = 60;
+      let totalTime = 60;
+      let timerInterval;
+      let currentAnswer = 0;
+      let totalQuestions = 0;
+      let correctAnswers = 0;
+      let isGameActive = false;
+
+      // Scratchpad State
+      let scratchMode = 'draw'; // 'draw' or 'text'
+      let isDrawing = false;
+      let isMaximized = false;
+      let lastX = 0;
+      let lastY = 0;
+      const scratchpad = document.getElementById('scratchpad');
+      const canvas = document.getElementById('scratch-canvas');
+      const ctx = canvas.getContext('2d');
+      const scratchText = document.getElementById('scratch-text');
+      const maximizeBtn = document.getElementById('btn-maximize');
+
+      // DOM Elements
+      const mainContainer = document.getElementById('main-container');
+      const screens = {
+        start: document.getElementById("start-screen"),
+        game: document.getElementById("game-screen"),
+        result: document.getElementById("result-screen"),
+      };
+      const input = document.getElementById("answer-input");
+      const problemEl = document.getElementById("problem");
+      const scoreEl = document.getElementById("score-el");
+      const streakEl = document.getElementById("streak-el");
+      const timerBar = document.getElementById("timer-bar");
+
+      function setDifficulty(time, btn) {
+          initialTime = time;
+          document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+      }
+
+      // Init Canvas
+      function initCanvas() {
+        if (!canvas.offsetParent) return; // Hidden
+        const rect = canvas.parentElement.getBoundingClientRect();
+        // Set actual canvas size to match display size for sharp rendering
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        
+        ctx.strokeStyle = '#1f2937';
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        
+        updateContextStyle();
+      }
+      
+      function updateContextStyle() {
+          if (scratchMode === 'eraser') {
+              ctx.globalCompositeOperation = 'destination-out';
+              ctx.lineWidth = 20;
+              canvas.style.cursor = 'cell'; // Or a custom cursor
+          } else {
+              ctx.globalCompositeOperation = 'source-over';
+              ctx.lineWidth = 2;
+              canvas.style.cursor = 'crosshair';
+          }
+      }
+      
+      // Resize observer to handle window resize
+      const resizeObserver = new ResizeObserver(() => {
+        if (isGameActive && canvas.offsetParent) {
+            // Optional: Save content before resize
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            tempCanvas.getContext('2d').drawImage(canvas, 0, 0);
+            
+            initCanvas();
+            
+            // Restore content
+            // Force source-over to draw the old content correctly
+            const prevOp = ctx.globalCompositeOperation;
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 0, 0, canvas.width, canvas.height);
+            // Restore mode
+            ctx.globalCompositeOperation = prevOp;
+        }
+      });
+      resizeObserver.observe(document.querySelector('.canvas-container'));
+
+      // Canvas Events
+      function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+            x: clientX - rect.left,
+            y: clientY - rect.top
+        };
+      }
+
+      function startDrawing(e) {
+        if (scratchMode !== 'draw' && scratchMode !== 'eraser') return;
+        isDrawing = true;
+        const pos = getPos(e);
+        lastX = pos.x;
+        lastY = pos.y;
+      }
+
+      function draw(e) {
+        if (!isDrawing) return;
+        if (scratchMode !== 'draw' && scratchMode !== 'eraser') return;
+        if (e.type !== 'mousemove' && e.type !== 'mousedown') e.preventDefault(); // Prevent scrolling on touch
+        
+        const pos = getPos(e);
+        
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        
+        lastX = pos.x;
+        lastY = pos.y;
+      }
+
+      function stopDrawing() {
+        isDrawing = false;
+      }
+
+      canvas.addEventListener('mousedown', startDrawing);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', stopDrawing);
+      canvas.addEventListener('mouseout', stopDrawing);
+
+      canvas.addEventListener('touchstart', startDrawing, {passive: false});
+      canvas.addEventListener('touchmove', draw, {passive: false});
+      canvas.addEventListener('touchend', stopDrawing);
+
+      function setScratchMode(mode) {
+        scratchMode = mode;
+        document.getElementById('btn-draw').classList.toggle('active', mode === 'draw');
+        document.getElementById('btn-eraser').classList.toggle('active', mode === 'eraser');
+        document.getElementById('btn-text').classList.toggle('active', mode === 'text');
+        
+        if (mode === 'draw' || mode === 'eraser') {
+            canvas.style.display = 'block';
+            scratchText.classList.remove('active');
+            updateContextStyle();
+        } else {
+            canvas.style.display = 'none';
+            scratchText.classList.add('active');
+            scratchText.focus();
+        }
+      }
+
+      function clearScratchpad() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        scratchText.value = '';
+      }
+
+      function toggleMaximize() {
+          isMaximized = !isMaximized;
+          
+          if (isMaximized) {
+              scratchpad.classList.add('maximized');
+              maximizeBtn.textContent = '⤡'; // Restore icon
+          } else {
+              scratchpad.classList.remove('maximized');
+              maximizeBtn.textContent = '⤢'; // Maximize icon
+          }
+          
+          // Re-init canvas after transition (wait for CSS transition)
+          // We can use the resize observer to handle this, but let's force a check after transition
+          setTimeout(() => {
+             // Trigger resize observer manually or let it happen naturally
+             // Saving content is handled by resize observer logic if we update it correctly
+             // But ResizeObserver might be enough. Let's see.
+             // Actually, ResizeObserver is async and handles it.
+             // However, for better UX, we might want to ensure we don't lose content during the animation if possible.
+             // The current ResizeObserver logic saves/restores content.
+          }, 310);
+      }
+
+      // Setup Event Listeners
+      input.addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+          checkAnswer();
+        }
+      });
+
+      function showScreen(screenName) {
+        Object.values(screens).forEach((s) => s.classList.remove("active"));
+        screens[screenName].classList.add("active");
+
+        // Handle Layout
+        if (screenName === 'game') {
+            mainContainer.classList.remove('narrow');
+            // Delay initCanvas slightly to ensure layout is done
+            setTimeout(initCanvas, 50);
+        } else {
+            mainContainer.classList.add('narrow');
+        }
+      }
+
+      function showStartScreen() {
+        showScreen("start");
+      }
+
+      function startGame(mode) {
+        currentMode = mode;
+        score = 0;
+        streak = 0;
+        timeLeft = initialTime;
+        totalTime = initialTime;
+        totalQuestions = 0;
+        correctAnswers = 0;
+        isGameActive = true;
+
+        updateStats();
+        showScreen("game");
+        generateProblem();
+        input.value = "";
+        input.focus();
+        
+        // Auto clear scratchpad on start
+        clearScratchpad();
+        updateTimerDisplay(); // Initial display
+
+        // Start Timer
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+          if (!isGameActive) return;
+
+          timeLeft -= 0.1;
+          const percentage = (timeLeft / totalTime) * 100;
+          timerBar.style.width = `${Math.max(0, percentage)}%`;
+          
+          updateTimerDisplay(); // Update text
+
+          if (percentage <= 20) {
+            timerBar.style.background = "#ef4444";
+          } else {
+            timerBar.style.background = "#4f46e5";
+          }
+
+          if (timeLeft <= 0) {
+            endGame();
+          }
+        }, 100);
+      }
+      
+      function updateTimerDisplay() {
+          const minutes = Math.floor(Math.ceil(timeLeft) / 60);
+          const seconds = Math.ceil(timeLeft) % 60;
+          const timeText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+          // Show timer text inside or above timer bar if we had an element.
+          // Let's add a timer text element dynamically if it doesn't exist, or just use existing structure?
+          // We don't have a timer text element. Let's create one or just put it in the stats bar?
+          // Actually, let's create a dedicated timer display overlay or put it in stats bar.
+          // Let's modify stats bar to include time.
+          
+          // Or cleaner: Add a timer overlay on the progress bar? Or just add it to stats bar.
+          // Let's look at stats-bar HTML:
+          // <div class="stats-bar"><span id="score-el">...</span><span id="streak-el">...</span></div>
+          // We can insert a timer span in the middle.
+          
+          let timerEl = document.getElementById('timer-text-el');
+          if (!timerEl) {
+              const statsBar = document.querySelector('.stats-bar');
+              timerEl = document.createElement('span');
+              timerEl.id = 'timer-text-el';
+              // Insert in middle
+              statsBar.insertBefore(timerEl, statsBar.children[1]);
+          }
+          timerEl.textContent = `⏱️ ${timeText}`;
+      }
+
+      function generateProblem() {
+        let type = currentMode;
+        if (type === "mixed") {
+          type = Math.random() > 0.5 ? "multiplication" : "division";
+        }
+
+        let num1, num2, symbol;
+
+        if (type === "multiplication") {
+          // 3-digit * 2-digit
+          num1 = Math.floor(Math.random() * 900) + 100; // 100-999
+          num2 = Math.floor(Math.random() * 90) + 10; // 10-99
+          currentAnswer = num1 * num2;
+          symbol = "×";
+        } else {
+          // 3-digit / 2-digit
+          // Generate answer and divisor first to ensure integer result
+          // Divisor (2-digit)
+          num2 = Math.floor(Math.random() * 90) + 10; // 10-99
+
+          // Result. We want Dividend to be 3-digit (100-999).
+          // Dividend = Divisor * Quotient
+          // So Quotient range:
+          // Min Quotient = 100 / Divisor
+          // Max Quotient = 999 / Divisor
+
+          let minQ = Math.ceil(100 / num2);
+          let maxQ = Math.floor(999 / num2);
+
+          // If range is invalid (shouldn't happen for 10-99 divisor, min possible is 100/99=1, max 999/10=99)
+          if (minQ > maxQ) {
+            // Fallback simply
+            num2 = 20;
+            minQ = 5;
+            maxQ = 49;
+          }
+
+          let quotient = Math.floor(Math.random() * (maxQ - minQ + 1)) + minQ;
+
+          num1 = num2 * quotient; // This is the dividend
+          currentAnswer = quotient;
+          symbol = "÷";
+        }
+
+        problemEl.textContent = `${num1} ${symbol} ${num2}`;
+      }
+
+      function checkAnswer() {
+        if (!isGameActive) return;
+
+        const userVal = parseInt(input.value);
+        if (isNaN(userVal)) return;
+
+        totalQuestions++;
+        const isCorrect = userVal === currentAnswer;
+
+        if (isCorrect) {
+          handleCorrect();
+        } else {
+          handleWrong();
+        }
+
+        input.value = "";
+        input.focus();
+        updateStats();
+        
+        // Auto clear scratchpad on next question? 
+        // User might want to see where they went wrong, so maybe NOT clear automatically on wrong answer.
+        // But on correct answer, usually we move on. 
+        // Let's Keep it manual for now to be safe, or clear only on correct?
+        // User feedback usually prefers manual clearing or clearing when NEW problem appears.
+        if (isGameActive) {
+            generateProblem();
+            // Optional: clearScratchpad(); // Let's leave it for user to decide or add a preference later.
+        }
+      }
+
+      function handleCorrect() {
+        correctAnswers++;
+        streak++;
+
+        // Calculate score based on streak
+        const points = 10 + streak * 2;
+        score += points;
+
+        // Add time bonus (max 60s)
+        timeLeft = Math.min(totalTime, timeLeft + 2);
+
+        // Visual feedback
+        input.classList.add("correct-anim");
+        setTimeout(() => input.classList.remove("correct-anim"), 400);
+      }
+
+      function handleWrong() {
+        streak = 0;
+        // Time penalty
+        timeLeft = Math.max(0, timeLeft - 5);
+
+        // Visual feedback
+        input.classList.add("wrong-anim");
+        setTimeout(() => input.classList.remove("wrong-anim"), 400);
+      }
+
+      function updateStats() {
+        scoreEl.textContent = `得分: ${score}`;
+        streakEl.textContent = `连击: ${streak}`;
+      }
+
+      function endGame() {
+        isGameActive = false;
+        clearInterval(timerInterval);
+
+        document.getElementById("final-score").textContent = score;
+        document.getElementById("correct-count").textContent =
+          `${correctAnswers}/${totalQuestions}`;
+
+        const acc =
+          totalQuestions > 0
+            ? Math.round((correctAnswers / totalQuestions) * 100)
+            : 0;
+        document.getElementById("accuracy").textContent = `${acc}%`;
+
+        showScreen("result");
+      }
+    </script>
+  </body>
+</html>
