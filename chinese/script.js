@@ -85,6 +85,10 @@ function initGame() {
 
   const modeSelect = document.getElementById("mode-select");
   if (modeSelect) {
+    // Initialize mode from select element to ensure sync
+    currentMode = modeSelect.value;
+    updateModeUI();
+
     modeSelect.addEventListener("change", (e) => {
       currentMode = e.target.value;
       updateModeUI();
@@ -498,6 +502,7 @@ function updateModeUI() {
 
   if (currentMode === "select" || currentMode === "select_confused") {
     document.body.classList.remove("mode-handwriting");
+    document.body.classList.add("pool-visible");
     document.getElementById("handwriting-container").classList.add("hidden");
     pool.classList.remove("hidden");
     if (positionSelect) positionSelect.style.display = "inline-block";
@@ -508,6 +513,7 @@ function updateModeUI() {
     // Layout will be adjusted in generateSelectionPool -> adjustLayout
   } else if (currentMode === "handwriting") {
     document.body.classList.add("mode-handwriting");
+    document.body.classList.remove("pool-visible");
     pool.classList.add("hidden");
     if (positionSelect) positionSelect.style.display = "none";
     inputs.forEach((input) => {
@@ -535,6 +541,7 @@ function updateModeUI() {
     }
   } else {
     document.body.classList.remove("mode-handwriting");
+    document.body.classList.remove("pool-visible");
     document.getElementById("handwriting-container").classList.add("hidden");
     pool.classList.add("hidden");
     if (positionSelect) positionSelect.style.display = "none";
