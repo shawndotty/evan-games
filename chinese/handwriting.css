@@ -32,6 +32,17 @@
     font-weight: bold;
 }
 
+.grid-style-select {
+    font-size: 0.9rem;
+    padding: 2px 25px 2px 8px; /* Extra right padding for arrow */
+    margin-left: 10px;
+    border: 1px solid var(--primary-color);
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: pointer;
+    min-width: 85px;
+}
+
 /* Close icon styles removed */
 
 #handwriting-canvas {
