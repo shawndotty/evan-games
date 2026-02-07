@@ -384,7 +384,7 @@ body.pool-right .container {
     background-color: var(--bg-color);
     width: 90%;
     max-width: 600px;
-    max-height: 80vh;
+    height: 80vh; /* Fixed height instead of max-height */
     border-radius: 10px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     display: flex;
@@ -420,6 +420,28 @@ body.pool-right .container {
 
 .close-modal:hover {
     color: #fff;
+}
+
+.modal-search-container {
+    padding: 10px 20px;
+    background-color: #f0f0f0;
+    border-bottom: 1px solid #ddd;
+}
+
+#poem-search {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box; /* Ensure padding doesn't affect width */
+    font-family: inherit;
+}
+
+#poem-search:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 5px rgba(139, 69, 19, 0.2);
 }
 
 .poem-list {

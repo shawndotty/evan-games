@@ -26,7 +26,15 @@ function initGame() {
   if (difficultySelect) {
     difficultySelect.addEventListener("change", (e) => {
       currentDifficulty = e.target.value;
-      startNewGame();
+      // Just re-render the current poem with new difficulty, don't switch poem
+      if (currentPoem) {
+        renderPoem();
+        document.getElementById("message-area").textContent = "";
+        document.getElementById("message-area").className = "";
+        lastFocusedInput = null;
+      } else {
+        startNewGame();
+      }
     });
   }
 
@@ -74,6 +82,11 @@ function initGame() {
         closePoemPicker();
       }
     });
+
+  // Search input listener
+  document.getElementById("poem-search").addEventListener("input", (e) => {
+    renderPoemList(e.target.value);
+  });
 
   document
     .getElementById("restart-btn")
@@ -707,13 +720,34 @@ function startSpecificGame(index) {
 
 function openPoemPicker() {
   const modal = document.getElementById("poem-picker-modal");
-  const list = document.getElementById("poem-list");
+  if (!modal) return;
 
-  if (!modal || !list) return;
+  // Clear search input
+  const searchInput = document.getElementById("poem-search");
+  if (searchInput) searchInput.value = "";
+
+  // Render full list
+  renderPoemList();
+
+  modal.classList.remove("hidden");
+}
+
+function renderPoemList(filterText = "") {
+  const list = document.getElementById("poem-list");
+  if (!list) return;
 
   list.innerHTML = ""; // Clear existing
 
+  const lowerFilter = filterText.toLowerCase();
+
   poems.forEach((poem, index) => {
+    // Filter based on title or author
+    if (filterText) {
+      const matchTitle = poem.title.toLowerCase().includes(lowerFilter);
+      const matchAuthor = poem.author.toLowerCase().includes(lowerFilter);
+      if (!matchTitle && !matchAuthor) return;
+    }
+
     const item = document.createElement("div");
     item.className = "poem-item";
     item.onclick = () => {
@@ -733,10 +767,6 @@ function openPoemPicker() {
     item.appendChild(authorSpan);
     list.appendChild(item);
   });
-
-  modal.classList.remove("hidden");
-  // Only set display flex if it was display none, but css class hidden handles it.
-  // Actually our CSS .hidden sets display:none. Removing it restores display:flex (defined in CSS for .modal)
 }
 
 function closePoemPicker() {
