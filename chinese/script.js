@@ -186,6 +186,13 @@ function writing(e) {
   const canvas = document.getElementById("handwriting-canvas");
   const coords = getCanvasCoordinates(e, canvas);
 
+  // Distance-based sampling (Smoothing) to reduce jitter and improve recognition
+  const dx = coords.x - lastPoint.x;
+  const dy = coords.y - lastPoint.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  if (distance < 5) return; // Ignore small movements
+
   hwContext.lineTo(coords.x, coords.y);
   hwContext.stroke();
 
@@ -282,8 +289,19 @@ async function recognizeHandwriting() {
   if (handwritingRecognizer && currentStrokesSys.length > 0) {
     try {
       const drawing = handwritingRecognizer.startDrawing();
-      for (const stroke of currentStrokesSys) {
-        drawing.addStroke(stroke);
+      for (const strokePoints of currentStrokesSys) {
+        // Create a HandwritingStroke object if available
+        if (typeof HandwritingStroke !== "undefined") {
+          const stroke = new HandwritingStroke();
+          for (const point of strokePoints) {
+            stroke.addPoint(point);
+          }
+          drawing.addStroke(stroke);
+        } else {
+          // Fallback for older implementations (if any)
+          // or if HandwritingStroke is not globally exposed
+          drawing.addStroke(strokePoints);
+        }
       }
       const predictions = await drawing.getPrediction();
       if (predictions && predictions.length > 0) {
