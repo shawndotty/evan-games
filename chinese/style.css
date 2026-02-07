@@ -185,15 +185,22 @@ button {
 
 /* Selection Pool */
 .selection-pool {
-    margin: 20px 0;
-    padding: 15px;
-    background-color: rgba(255, 255, 255, 0.5);
-    border-radius: 8px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+    background-color: rgba(253, 245, 230, 0.95); /* OldLace with opacity */
+    border-top: 2px solid var(--secondary-color);
+    box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 10px;
-    min-height: 50px;
+    gap: 15px;
+    z-index: 1000;
+    box-sizing: border-box;
+    transition: transform 0.3s ease-in-out;
 }
 
 .selection-pool.hidden {
@@ -201,8 +208,8 @@ button {
 }
 
 .pool-char {
-    width: 40px;
-    height: 40px;
+    width: 45px;
+    height: 45px;
     font-size: 1.5rem;
     display: flex;
     align-items: center;
@@ -217,9 +224,9 @@ button {
 }
 
 .pool-char:hover {
-    transform: translateY(-2px);
+    transform: translateY(-5px);
     border-color: var(--primary-color);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 5px 10px rgba(0,0,0,0.2);
 }
 
 .pool-char:active {
@@ -228,14 +235,16 @@ button {
 
 .pool-char.used {
     opacity: 0.5;
-    background-color: #ddd;
+    background-color: #e0e0e0;
     cursor: default;
     pointer-events: none;
+    border-color: #ccc;
 }
 
 @media (max-width: 600px) {
     .container {
         padding: 20px;
+        padding-bottom: 140px; /* Ensure space for fixed pool on mobile */
     }
     
     h1 {
@@ -251,4 +260,20 @@ button {
         height: 30px;
         line-height: 30px;
     }
+    
+    .selection-pool {
+        padding: 10px;
+        gap: 8px;
+    }
+    
+    .pool-char {
+        width: 36px;
+        height: 36px;
+        font-size: 1.2rem;
+    }
+}
+
+/* Add padding to container to prevent content from being hidden behind the fixed pool */
+.container {
+    padding-bottom: 140px;
 }
