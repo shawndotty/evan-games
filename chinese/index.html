@@ -31,8 +31,21 @@
             <option value="hard">困难 (Hard)</option>
           </select>
           <button id="new-game-btn">换一首</button>
+          <button id="pick-poem-btn" class="secondary-btn">挑一首</button>
         </div>
       </header>
+
+      <div id="poem-picker-modal" class="modal hidden">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>选择诗词</h2>
+            <span class="close-modal">&times;</span>
+          </div>
+          <div id="poem-list" class="poem-list">
+            <!-- List items will be generated here -->
+          </div>
+        </div>
+      </div>
 
       <main id="game-area">
         <div class="game-layout">

@@ -5,6 +5,8 @@ let currentDifficulty = "medium";
 let blanks = []; // Stores {lineIndex, charIndex, correctChar, inputElement}
 let lastFocusedInput = null; // Track the last focused input for handwriting insertion
 let handwritingCanvas = null; // Handwriting canvas instance
+let recentPoemIndices = []; // Track recently used poem indices
+const MAX_RECENT_HISTORY = 20; // Ensure no repeats within this many turns
 
 // Load poems from global variable (loaded via poems.js)
 function loadPoems() {
@@ -51,7 +53,28 @@ function initGame() {
   document
     .getElementById("new-game-btn")
     .addEventListener("click", startNewGame);
+  // Check Button
   document.getElementById("check-btn").addEventListener("click", checkAnswers);
+
+  // Pick Poem Button
+  document
+    .getElementById("pick-poem-btn")
+    .addEventListener("click", openPoemPicker);
+
+  // Close Modal Button
+  document
+    .querySelector(".close-modal")
+    .addEventListener("click", closePoemPicker);
+
+  // Close modal when clicking outside
+  document
+    .getElementById("poem-picker-modal")
+    .addEventListener("click", (e) => {
+      if (e.target.id === "poem-picker-modal") {
+        closePoemPicker();
+      }
+    });
+
   document
     .getElementById("restart-btn")
     .addEventListener("click", restartCurrentGame);
@@ -599,9 +622,50 @@ function handlePoolSelection(char) {
 function startNewGame() {
   if (poems.length === 0) return;
 
-  // Pick a random poem
-  const randomIndex = Math.floor(Math.random() * poems.length);
-  currentPoem = poems[randomIndex];
+  // Calculate safe history limit based on total poems
+  // We need at least 1 poem available to pick
+  const historyLimit = Math.min(
+    MAX_RECENT_HISTORY,
+    Math.max(0, poems.length - 1),
+  );
+
+  let availableIndices = [];
+  for (let i = 0; i < poems.length; i++) {
+    if (!recentPoemIndices.includes(i)) {
+      availableIndices.push(i);
+    }
+  }
+
+  // Fallback: If for some reason no indices available (shouldn't happen with correct limit logic),
+  // reset history or pick from all.
+  if (availableIndices.length === 0) {
+    // Determine if we should clear history or just pick any.
+    // If poems.length <= 1, we can't do anything.
+    if (poems.length <= 1) {
+      availableIndices = [0];
+    } else {
+      // This case implies history is full of all poems?
+      // Just reset history to allow re-picking oldest ones
+      // Or better: keep the most recent ones and allow picking from the oldest ones that were just evicted
+      // But simply: if no available, reset history
+      recentPoemIndices = [];
+      for (let i = 0; i < poems.length; i++) availableIndices.push(i);
+    }
+  }
+
+  // Pick random from available
+  const randomAvailableIndex = Math.floor(
+    Math.random() * availableIndices.length,
+  );
+  const selectedPoemIndex = availableIndices[randomAvailableIndex];
+
+  currentPoem = poems[selectedPoemIndex];
+
+  // Update history
+  recentPoemIndices.push(selectedPoemIndex);
+  if (recentPoemIndices.length > historyLimit) {
+    recentPoemIndices.shift();
+  }
 
   renderPoem();
   document.getElementById("message-area").textContent = "";
@@ -610,7 +674,78 @@ function startNewGame() {
   lastFocusedInput = null;
 }
 
-// Restart current game (clear inputs)
+function startSpecificGame(index) {
+  if (index < 0 || index >= poems.length) return;
+
+  currentPoem = poems[index];
+
+  // We don't necessarily need to add manual selection to recent history for deduplication purposes,
+  // as deduplication is for "random" mode.
+  // However, if we want to avoid "Next Poem" picking this one immediately again, we should add it.
+  // Let's add it.
+
+  // Remove if already in history (to move to end)
+  const historyIndex = recentPoemIndices.indexOf(index);
+  if (historyIndex > -1) {
+    recentPoemIndices.splice(historyIndex, 1);
+  }
+
+  recentPoemIndices.push(index);
+  const historyLimit = Math.min(
+    MAX_RECENT_HISTORY,
+    Math.max(0, poems.length - 1),
+  );
+  if (recentPoemIndices.length > historyLimit) {
+    recentPoemIndices.shift();
+  }
+
+  renderPoem();
+  document.getElementById("message-area").textContent = "";
+  document.getElementById("message-area").className = "";
+  lastFocusedInput = null;
+}
+
+function openPoemPicker() {
+  const modal = document.getElementById("poem-picker-modal");
+  const list = document.getElementById("poem-list");
+
+  if (!modal || !list) return;
+
+  list.innerHTML = ""; // Clear existing
+
+  poems.forEach((poem, index) => {
+    const item = document.createElement("div");
+    item.className = "poem-item";
+    item.onclick = () => {
+      startSpecificGame(index);
+      closePoemPicker();
+    };
+
+    const titleSpan = document.createElement("span");
+    titleSpan.className = "poem-item-title";
+    titleSpan.textContent = poem.title;
+
+    const authorSpan = document.createElement("span");
+    authorSpan.className = "poem-item-author";
+    authorSpan.textContent = `[${poem.dynasty}] ${poem.author}`;
+
+    item.appendChild(titleSpan);
+    item.appendChild(authorSpan);
+    list.appendChild(item);
+  });
+
+  modal.classList.remove("hidden");
+  // Only set display flex if it was display none, but css class hidden handles it.
+  // Actually our CSS .hidden sets display:none. Removing it restores display:flex (defined in CSS for .modal)
+}
+
+function closePoemPicker() {
+  const modal = document.getElementById("poem-picker-modal");
+  if (modal) {
+    modal.classList.add("hidden");
+  }
+}
+
 function restartCurrentGame() {
   if (blanks.length === 0) return;
 
