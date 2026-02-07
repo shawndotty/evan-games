@@ -467,11 +467,30 @@ function checkAnswers() {
   if (allCorrect) {
     msgArea.textContent = "恭喜你！全部答对了！";
     msgArea.style.color = "var(--success-color)";
+
+    // Play success sound
+    playSound("success");
+
+    // Trigger confetti
+    if (typeof confetti === "function") {
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+      });
+    }
   } else {
+    // Play error sound
+    playSound("error");
+
     if (filledCount < blanks.length) {
       msgArea.textContent = "还有没填完的空哦，继续加油！";
     } else {
-      msgArea.textContent = "有错误，请检查红色标记的地方。";
+      const randomMsg =
+        encouragingMessages[
+          Math.floor(Math.random() * encouragingMessages.length)
+        ];
+      msgArea.textContent = `有错误，请检查红色标记的地方。${randomMsg}`;
     }
     msgArea.style.color = "var(--error-color)";
   }
@@ -540,6 +559,61 @@ function showHint() {
     document.getElementById("message-area").textContent = "你已经全部填对了！";
   }
 }
+
+// Sound effects support
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playSound(type) {
+  // Ensure context is running (browsers suspend it until user interaction)
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+
+  const now = audioCtx.currentTime;
+
+  if (type === "success") {
+    // Play a happy major chord (C-E-G-C)
+    [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      const startTime = now + i * 0.1;
+      osc.start(startTime);
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(0.1, startTime + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.5);
+      osc.stop(startTime + 0.5);
+    });
+  } else if (type === "error") {
+    // Play a sad "wobble" sound
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sawtooth"; // Use sawtooth for a buzzier, more audible "wrong" sound
+    osc.frequency.setValueAtTime(300, now); // Higher starting pitch
+    osc.frequency.linearRampToValueAtTime(150, now + 0.3); // Slide down
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start(now);
+    gain.gain.setValueAtTime(0.2, now); // Louder volume
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+    osc.stop(now + 0.3);
+  }
+}
+
+const encouragingMessages = [
+  "别气馁，再试一次！",
+  "失败是成功之母，加油！",
+  "再仔细看看，你一定行的！",
+  "差一点点就对了，继续努力！",
+  "相信自己，下次一定全对！",
+  "多读几遍诗句，语感会告诉你答案！",
+];
 
 // Start
 loadPoems();
