@@ -21,16 +21,38 @@ function loadPoems() {
 // Initialize game state
 function initGame() {
   const difficultySelect = document.getElementById("difficulty-select");
-  difficultySelect.addEventListener("change", (e) => {
-    currentDifficulty = e.target.value;
-    startNewGame();
-  });
+  if (difficultySelect) {
+    difficultySelect.addEventListener("change", (e) => {
+      currentDifficulty = e.target.value;
+      startNewGame();
+    });
+  }
 
   const modeSelect = document.getElementById("mode-select");
-  modeSelect.addEventListener("change", (e) => {
-    currentMode = e.target.value;
-    updateModeUI();
-  });
+  if (modeSelect) {
+    modeSelect.addEventListener("change", (e) => {
+      currentMode = e.target.value;
+      updateModeUI();
+      // Reset current poem inputs when switching modes
+      const inputs = document.querySelectorAll(".char-input");
+      inputs.forEach((input) => {
+        input.value = "";
+        input.classList.remove("correct", "incorrect");
+      });
+    });
+  }
+
+  const poolPositionSelect = document.getElementById("pool-position-select");
+  if (poolPositionSelect) {
+    poolPositionSelect.addEventListener("change", (e) => {
+      updatePoolPosition(e.target.value);
+    });
+    // Initialize position
+    updatePoolPosition(poolPositionSelect.value);
+  } else {
+    // Default to bottom if select not found
+    updatePoolPosition("bottom");
+  }
 
   document
     .getElementById("new-game-btn")
@@ -39,6 +61,14 @@ function initGame() {
   document.getElementById("hint-btn").addEventListener("click", showHint);
 
   startNewGame();
+}
+
+function updatePoolPosition(position) {
+  const body = document.body;
+  // Remove all position classes
+  body.classList.remove("pool-bottom", "pool-left", "pool-right");
+  // Add new position class
+  body.classList.add(`pool-${position}`);
 }
 
 function displayCandidates(candidates) {
@@ -76,15 +106,18 @@ function insertCharacter(char) {
 function updateModeUI() {
   const pool = document.getElementById("selection-pool");
   const inputs = document.querySelectorAll(".char-input");
+  const positionSelect = document.getElementById("pool-position-select");
 
   if (currentMode === "select") {
     pool.classList.remove("hidden");
+    if (positionSelect) positionSelect.style.display = "inline-block";
     inputs.forEach((input) => {
       input.setAttribute("readonly", "true");
     });
     generateSelectionPool();
   } else {
     pool.classList.add("hidden");
+    if (positionSelect) positionSelect.style.display = "none";
     inputs.forEach((input) => input.removeAttribute("readonly"));
   }
 }
@@ -288,8 +321,30 @@ function handleInput(e, input) {
 }
 
 function handleKeydown(e, input) {
-  if (e.key === "Backspace" && input.value === "") {
-    focusPrevInput(input);
+  if (e.key === "Backspace") {
+    if (currentMode === "select") {
+      e.preventDefault(); // Prevent browser back navigation
+      if (input.value !== "") {
+        // If current input has content, clear it
+        input.value = "";
+        input.classList.remove("correct", "incorrect");
+      } else {
+        // If current is empty, move to previous and clear it
+        const inputs = Array.from(document.querySelectorAll(".char-input"));
+        const index = inputs.indexOf(input);
+        if (index > 0) {
+          const prevInput = inputs[index - 1];
+          prevInput.focus();
+          prevInput.value = "";
+          prevInput.classList.remove("correct", "incorrect");
+        }
+      }
+    } else {
+      // Input mode
+      if (input.value === "") {
+        focusPrevInput(input);
+      }
+    }
   }
 }
 
