@@ -81,6 +81,12 @@ function initGame() {
   // Initialize Handwriting Canvas
   initHandwritingCanvas();
 
+  // Listen for window resize to adjust layout
+  window.addEventListener("resize", () => {
+    // Debounce slightly or just run
+    adjustLayout();
+  });
+
   startNewGame();
 }
 
@@ -337,6 +343,11 @@ function updatePoolPosition(position) {
   body.classList.remove("pool-bottom", "pool-left", "pool-right");
   // Add new position class
   body.classList.add(`pool-${position}`);
+
+  // Adjust layout after position change
+  requestAnimationFrame(() => {
+    adjustLayout();
+  });
 }
 
 function displayCandidates(candidates) {
@@ -385,6 +396,7 @@ function updateModeUI() {
       input.setAttribute("readonly", "true");
     });
     generateSelectionPool();
+    // Layout will be adjusted in generateSelectionPool -> adjustLayout
   } else if (currentMode === "handwriting") {
     document.body.classList.add("mode-handwriting");
     pool.classList.add("hidden");
@@ -451,6 +463,40 @@ function generateSelectionPool() {
     btn.addEventListener("click", () => handlePoolSelection(char));
     pool.appendChild(btn);
   });
+
+  // Wait for DOM update then adjust layout
+  requestAnimationFrame(() => {
+    adjustLayout();
+  });
+}
+
+function adjustLayout() {
+  const body = document.body;
+  const pool = document.getElementById("selection-pool");
+  const container = document.querySelector(".container");
+
+  if (!pool || !container) return;
+
+  // Reset styles first
+  container.style.marginLeft = "";
+  container.style.marginRight = "";
+
+  // Check if pool is visible
+  if (
+    pool.classList.contains("hidden") ||
+    getComputedStyle(pool).display === "none"
+  ) {
+    return;
+  }
+
+  if (body.classList.contains("pool-left")) {
+    const width = pool.offsetWidth;
+    // Add a little buffer if needed, but offsetWidth includes padding/border
+    container.style.marginLeft = `${width}px`;
+  } else if (body.classList.contains("pool-right")) {
+    const width = pool.offsetWidth;
+    container.style.marginRight = `${width}px`;
+  }
 }
 
 function generateDistractors(correctChars, count) {

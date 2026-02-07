@@ -235,36 +235,44 @@ body.pool-bottom .container {
 body.pool-left .selection-pool {
     top: 0;
     left: 0;
-    width: 200px;
+    width: auto; /* Allow auto width */
+    min-width: 200px;
+    max-width: 50vw; /* Prevent taking too much space */
     height: 100%;
     padding: 20px 10px;
     border-right: 2px solid var(--secondary-color);
     flex-direction: column; /* Stack vertically */
-    align-content: center;
+    align-content: flex-start; /* Align content to the left (top for column wrap) */
+    justify-content: flex-start; /* Align items to top */
     padding-top: 80px; /* Avoid header overlap if needed, or just aesthetics */
 }
 
 body.pool-left .container {
-    margin-left: 200px; /* Push content right */
-    width: calc(100% - 200px); /* Adjust width */
+    /* Margin will be handled by JS dynamically */
+    /* margin-left: 200px; */ 
+    width: auto; /* Let flex/block handle width, JS handles margin */
 }
 
 /* Position: Right */
 body.pool-right .selection-pool {
     top: 0;
     right: 0;
-    width: 200px;
+    width: auto; /* Allow auto width */
+    min-width: 200px;
+    max-width: 50vw;
     height: 100%;
     padding: 20px 10px;
     border-left: 2px solid var(--secondary-color);
     flex-direction: column; /* Stack vertically */
-    align-content: center;
+    align-content: flex-start; /* Align content to the left */
+    justify-content: flex-start; /* Align items to top */
     padding-top: 80px;
 }
 
 body.pool-right .container {
-    margin-right: 200px; /* Push content left */
-    width: calc(100% - 200px);
+    /* Margin will be handled by JS dynamically */
+    /* margin-right: 200px; */
+    width: auto;
 }
 
 .selection-pool.hidden {
