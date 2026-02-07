@@ -31,84 +31,7 @@ function initGame() {
   document.getElementById("check-btn").addEventListener("click", checkAnswers);
   document.getElementById("hint-btn").addEventListener("click", showHint);
 
-  // Handwriting init
-  initHandwriting();
-
   startNewGame();
-}
-
-function initHandwriting() {
-  // Initialize HanziLookup (Offline Recognition)
-  if (typeof HanziLookup !== "undefined" && typeof mmah_data !== "undefined") {
-    try {
-      HanziLookup.data = HanziLookup.data || {};
-      HanziLookup.data["mmah"] = mmah_data;
-      if (mmah_data.substrokes && typeof mmah_data.substrokes === "string") {
-        HanziLookup.data["mmah"].substrokes = HanziLookup.decodeCompact(
-          mmah_data.substrokes,
-        );
-      }
-
-      // Override handwriting.recognize to use HanziLookup
-      handwriting.recognize = function (trace, options, callback) {
-        var strokes = [];
-        for (var i = 0; i < trace.length; i++) {
-          var stroke = trace[i]; // [x[], y[], time[]]
-          var points = [];
-          for (var j = 0; j < stroke[0].length; j++) {
-            points.push([stroke[0][j], stroke[1][j]]);
-          }
-          strokes.push(points);
-        }
-        var analyzedChar = new HanziLookup.AnalyzedCharacter(strokes);
-        var matcher = new HanziLookup.Matcher("mmah");
-        matcher.match(analyzedChar, 10, function (matches) {
-          var results = matches.map(function (m) {
-            return m.character;
-          });
-          callback(results, undefined);
-        });
-      };
-    } catch (e) {
-      console.error("HanziLookup init error:", e);
-    }
-  }
-
-  try {
-    handwritingCanvas = new handwriting.Canvas(
-      document.getElementById("handwriting-canvas"),
-      3,
-    );
-
-    // Set callback for recognition
-    handwritingCanvas.setCallBack(function (data, err) {
-      if (err) {
-        console.error(err);
-        return;
-      }
-      displayCandidates(data);
-    });
-
-    // Set line width and color
-    handwritingCanvas.setLineWidth(5);
-    handwritingCanvas.setPenColor("#333333"); // Explicitly set color
-    handwritingCanvas.setCap("round");
-    handwritingCanvas.setLineJoin("round");
-
-    // Controls
-    document
-      .getElementById("clear-canvas-btn")
-      .addEventListener("click", () => {
-        handwritingCanvas.erase();
-        document.getElementById("candidate-words").innerHTML = "";
-      });
-
-    document.getElementById("recognize-btn").addEventListener("click", () => {
-      handwritingCanvas.recognize();
-    });
-  } catch (e) {
-    console.error("Handwriting library init failed", e);
-  }
 }
 
 function displayCandidates(candidates) {
@@ -154,9 +77,6 @@ function startNewGame() {
   document.getElementById("message-area").textContent = "";
   document.getElementById("message-area").className = "";
 
-  // Clear handwriting
-  if (handwritingCanvas) handwritingCanvas.erase();
-  document.getElementById("candidate-words").innerHTML = "";
   lastFocusedInput = null;
 }
 
@@ -184,11 +104,30 @@ function renderPoem() {
         const input = document.createElement("input");
         input.type = "text";
         input.className = "char-input";
-        input.maxLength = 1;
+        // input.maxLength = 1; // Removed to allow IME composition
         input.dataset.line = lineIndex;
         input.dataset.char = charIndex;
 
         // Add event listener for auto-focus next
+        input.addEventListener("compositionstart", () => {
+          input.dataset.isComposing = "true";
+        });
+        input.addEventListener("compositionend", () => {
+          input.dataset.isComposing = "false";
+          // If multiple chars entered (e.g. from IME), keep only the last one or valid one
+          // Usually user wants the last entered character if they are replacing,
+          // but here we are filling blanks.
+          // Let's just take the last character if length > 1
+          if (input.value.length > 1) {
+            // If user typed a full sentence, maybe we should handle that?
+            // But for now let's just keep the last char to be safe and simple
+            input.value = input.value.slice(-1);
+          }
+
+          if (input.value.length >= 1) {
+            focusNextInput(input);
+          }
+        });
         input.addEventListener("input", (e) => handleInput(e, input));
         input.addEventListener("keydown", (e) => handleKeydown(e, input));
 
@@ -266,7 +205,8 @@ function isChineseChar(char) {
 
 // Handle input for auto-focusing
 function handleInput(e, input) {
-  if (e.target.value.length === 1) {
+  if (input.dataset.isComposing === "true") return;
+  if (e.target.value.length >= 1) {
     focusNextInput(input);
   }
 }
