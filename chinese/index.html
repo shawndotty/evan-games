@@ -60,8 +60,12 @@
             <div class="handwriting-board">
               <div class="board-header">
                 <span>请在下方手写</span>
+                <select id="grid-style-select" style="font-size: 0.9rem; padding: 2px 5px; margin-left: 10px;">
+                  <option value="mizige" selected>米字格</option>
+                  <option value="tianzige">田字格</option>
+                </select>
               </div>
-              <canvas id="handwriting-canvas" width="360" height="360"></canvas>
+              <canvas id="handwriting-canvas" width="360" height="360" class="grid-mizige"></canvas>
               <div id="hw-candidates" class="hw-candidates"></div>
               <div class="board-controls">
                 <button id="hw-undo-btn" class="secondary-btn">撤销</button>

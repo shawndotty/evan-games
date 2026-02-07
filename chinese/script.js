@@ -68,6 +68,16 @@ function initGame() {
     .getElementById("hw-undo-btn")
     .addEventListener("click", undoHandwriting);
 
+  // Grid style selector
+  const gridSelect = document.getElementById("grid-style-select");
+  if (gridSelect) {
+    gridSelect.addEventListener("change", (e) => {
+      const canvas = document.getElementById("handwriting-canvas");
+      canvas.className = ""; // clear all
+      canvas.classList.add(`grid-${e.target.value}`);
+    });
+  }
+
   // Initialize Handwriting Canvas
   initHandwritingCanvas();
 

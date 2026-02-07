@@ -40,14 +40,27 @@
     background-color: #fff8dc; /* Consistent with input bg */
     cursor: crosshair;
     touch-action: none; /* Prevent scrolling while writing */
-    
-    /* Mi-character grid (米字格) background */
-    background-image: 
-        linear-gradient(to right, transparent 49.5%, rgba(200, 0, 0, 0.2) 49.5%, rgba(200, 0, 0, 0.2) 50.5%, transparent 50.5%), /* Vertical */
-        linear-gradient(to bottom, transparent 49.5%, rgba(200, 0, 0, 0.2) 49.5%, rgba(200, 0, 0, 0.2) 50.5%, transparent 50.5%), /* Horizontal */
-        linear-gradient(45deg, transparent 49.5%, rgba(200, 0, 0, 0.2) 49.5%, rgba(200, 0, 0, 0.2) 50.5%, transparent 50.5%), /* Diagonal 1 */
-        linear-gradient(-45deg, transparent 49.5%, rgba(200, 0, 0, 0.2) 49.5%, rgba(200, 0, 0, 0.2) 50.5%, transparent 50.5%); /* Diagonal 2 */
     background-size: 100% 100%;
+}
+
+/* Grid Styles */
+/* Mi-character grid (米字格) - Default */
+#handwriting-canvas.grid-mizige {
+    background-image: 
+        linear-gradient(to right, transparent 49.5%, rgba(200, 0, 0, 0.1) 49.5%, rgba(200, 0, 0, 0.1) 50.5%, transparent 50.5%), /* Vertical */
+        linear-gradient(to bottom, transparent 49.5%, rgba(200, 0, 0, 0.1) 49.5%, rgba(200, 0, 0, 0.1) 50.5%, transparent 50.5%), /* Horizontal */
+        linear-gradient(45deg, transparent 49.5%, rgba(200, 0, 0, 0.1) 49.5%, rgba(200, 0, 0, 0.1) 50.5%, transparent 50.5%), /* Diagonal 1 */
+        linear-gradient(-45deg, transparent 49.5%, rgba(200, 0, 0, 0.1) 49.5%, rgba(200, 0, 0, 0.1) 50.5%, transparent 50.5%); /* Diagonal 2 */
+}
+
+/* Four-line grid (四线格) - Interpreted as Pinyin grid lines for now, or maybe they meant Tianzige? */
+/* Given the context is Hanzi, they likely mean Tianzige (Cross grid) which divides the box into 4 squares */
+/* But if they strictly want "Four Lines" (Horizontal), I can add that too. */
+/* Let's stick to Tianzige (Cross) as the standard alternative to Mizige */
+#handwriting-canvas.grid-tianzige {
+    background-image: 
+        linear-gradient(to right, transparent 49.5%, rgba(200, 0, 0, 0.1) 49.5%, rgba(200, 0, 0, 0.1) 50.5%, transparent 50.5%), /* Vertical */
+        linear-gradient(to bottom, transparent 49.5%, rgba(200, 0, 0, 0.1) 49.5%, rgba(200, 0, 0, 0.1) 50.5%, transparent 50.5%); /* Horizontal */
 }
 
 .hw-candidates {
