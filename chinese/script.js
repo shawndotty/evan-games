@@ -52,15 +52,15 @@ function initGame() {
     .getElementById("new-game-btn")
     .addEventListener("click", startNewGame);
   document.getElementById("check-btn").addEventListener("click", checkAnswers);
+  document
+    .getElementById("restart-btn")
+    .addEventListener("click", restartCurrentGame);
   document.getElementById("hint-btn").addEventListener("click", showHint);
   document
     .getElementById("hint-char-btn")
     .addEventListener("click", showCharHint);
 
   // Handwriting UI events
-  document
-    .getElementById("hw-close-btn")
-    .addEventListener("click", hideHandwritingBoard);
   document
     .getElementById("hw-clear-btn")
     .addEventListener("click", clearHandwriting);
@@ -252,10 +252,6 @@ function showHandwritingBoard() {
   clearHandwriting();
 }
 
-function hideHandwritingBoard() {
-  document.getElementById("handwriting-container").classList.add("hidden");
-}
-
 async function recognizeHandwriting() {
   const candidatesDiv = document.getElementById("hw-candidates");
   if (currentStrokes.length === 0) {
@@ -372,6 +368,7 @@ function updateModeUI() {
 
   if (currentMode === "select" || currentMode === "select_confused") {
     document.body.classList.remove("mode-handwriting");
+    document.getElementById("handwriting-container").classList.add("hidden");
     pool.classList.remove("hidden");
     if (positionSelect) positionSelect.style.display = "inline-block";
     inputs.forEach((input) => {
@@ -407,6 +404,7 @@ function updateModeUI() {
     }
   } else {
     document.body.classList.remove("mode-handwriting");
+    document.getElementById("handwriting-container").classList.add("hidden");
     pool.classList.add("hidden");
     if (positionSelect) positionSelect.style.display = "none";
     inputs.forEach((input) => input.removeAttribute("readonly"));
@@ -554,6 +552,28 @@ function startNewGame() {
   document.getElementById("message-area").className = "";
 
   lastFocusedInput = null;
+}
+
+// Restart current game (clear inputs)
+function restartCurrentGame() {
+  if (blanks.length === 0) return;
+
+  // Clear all inputs
+  blanks.forEach((b) => {
+    b.element.value = "";
+    b.element.classList.remove("correct", "incorrect");
+  });
+
+  // Clear message area
+  const msgArea = document.getElementById("message-area");
+  msgArea.textContent = "";
+  msgArea.className = "";
+
+  // Reset focus to first input
+  lastFocusedInput = null;
+  if (blanks.length > 0) {
+    blanks[0].element.focus();
+  }
 }
 
 // Render the poem based on difficulty

@@ -1,16 +1,8 @@
 
 /* Handwriting Mode Styles */
 .handwriting-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
+    display: none; /* Hidden by default to avoid legacy popup issues */
+    /* Removed fixed position legacy styles */
 }
 
 .handwriting-overlay.hidden {
@@ -33,25 +25,14 @@
 .board-header {
     width: 100%;
     display: flex;
-    justify-content: space-between;
+    justify-content: center; /* Centered since close button is removed */
     align-items: center;
     font-size: 1.2rem;
     color: var(--primary-color);
     font-weight: bold;
 }
 
-.close-icon {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: #999;
-    padding: 0 5px;
-}
-
-.close-icon:hover {
-    color: var(--error-color);
-}
+/* Close icon styles removed */
 
 #handwriting-canvas {
     border: 2px solid var(--primary-color);
@@ -122,7 +103,7 @@ body.mode-handwriting .game-main-panel {
 
 /* Transform overlay to side panel */
 body.mode-handwriting .handwriting-overlay {
-    position: static !important; /* Override fixed */
+    /* position: static !important; */ /* Default is static now */
     width: auto !important;
     height: auto !important;
     background-color: transparent !important;
@@ -146,10 +127,12 @@ body.mode-handwriting .handwriting-board {
     margin: 0;
 }
 
-/* Hide close button in side-by-side mode */
+/* Hide close button in side-by-side mode - Removed as button is deleted */
+/* 
 body.mode-handwriting #hw-close-btn {
     display: none;
-}
+} 
+*/
 
 /* Responsive: stack on small screens */
 @media (max-width: 900px) {
