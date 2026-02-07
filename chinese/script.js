@@ -59,6 +59,9 @@ function initGame() {
     .addEventListener("click", startNewGame);
   document.getElementById("check-btn").addEventListener("click", checkAnswers);
   document.getElementById("hint-btn").addEventListener("click", showHint);
+  document
+    .getElementById("hint-char-btn")
+    .addEventListener("click", showCharHint);
 
   startNewGame();
 }
@@ -493,6 +496,37 @@ function checkAnswers() {
       msgArea.textContent = `有错误，请检查红色标记的地方。${randomMsg}`;
     }
     msgArea.style.color = "var(--error-color)";
+  }
+}
+
+// Show hint (one character)
+function showCharHint() {
+  const msgArea = document.getElementById("message-area");
+
+  if (!lastFocusedInput) {
+    msgArea.textContent = "请先点击选中一个需要提示的填空格子";
+    msgArea.style.color = "var(--primary-color)";
+    return;
+  }
+
+  // Find the blank object corresponding to the input
+  const blank = blanks.find((b) => b.element === lastFocusedInput);
+
+  if (blank) {
+    if (blank.element.value === blank.correctChar) {
+      msgArea.textContent = "这个字已经是正确的啦！";
+      msgArea.style.color = "var(--success-color)";
+    } else {
+      blank.element.value = blank.correctChar;
+      blank.element.classList.add("correct");
+      blank.element.classList.remove("incorrect");
+      msgArea.textContent = "";
+
+      // Play success sound for feedback
+      playSound("success");
+
+      blank.element.focus();
+    }
   }
 }
 
