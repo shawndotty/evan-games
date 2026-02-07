@@ -64,10 +64,17 @@
 .hw-candidates {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-    min-height: 40px;
+    justify-content: flex-start; /* Better for reading list */
+    align-content: flex-start;
+    gap: 8px;
+    min-height: 60px;
+    max-height: 200px; /* Limit height to allow scrolling */
+    overflow-y: auto;
     width: 100%;
+    padding: 5px;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    background-color: #fafafa;
 }
 
 .candidate-char {
@@ -94,4 +101,66 @@
     gap: 15px;
     width: 100%;
     justify-content: center;
+}
+
+/* Split Layout for Handwriting Mode */
+body.mode-handwriting .game-layout {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 40px;
+}
+
+body.mode-handwriting .game-main-panel {
+    flex: 1;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Transform overlay to side panel */
+body.mode-handwriting .handwriting-overlay {
+    position: static !important; /* Override fixed */
+    width: auto !important;
+    height: auto !important;
+    background-color: transparent !important;
+    display: block !important; /* Always show in layout flow */
+    z-index: auto;
+}
+
+/* Handle visibility/interactivity in side-panel mode */
+body.mode-handwriting .handwriting-overlay.hidden {
+    /* Show it but dimmed to indicate inactivity */
+    display: block !important;
+    opacity: 0.5;
+    pointer-events: none;
+    filter: grayscale(100%);
+}
+
+body.mode-handwriting .handwriting-board {
+    box-shadow: none;
+    border: 2px solid var(--secondary-color);
+    width: 340px; /* Fixed width for the panel */
+    margin: 0;
+}
+
+/* Hide close button in side-by-side mode */
+body.mode-handwriting #hw-close-btn {
+    display: none;
+}
+
+/* Responsive: stack on small screens */
+@media (max-width: 900px) {
+    body.mode-handwriting .game-layout {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    body.mode-handwriting .handwriting-board {
+        width: 100%;
+        max-width: 340px;
+        margin-top: 20px;
+    }
 }

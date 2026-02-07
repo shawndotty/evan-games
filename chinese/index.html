@@ -35,41 +35,46 @@
       </header>
 
       <main id="game-area">
-        <div id="poem-info">
-          <h2 id="poem-title"></h2>
-          <p id="poem-author"></p>
-        </div>
-
-        <div id="poem-content" class="poem-container">
-          <!-- 诗句内容将在这里生成 -->
-        </div>
-
-        <div id="selection-pool" class="selection-pool hidden">
-                <!-- 待选字将在这里生成 -->
+        <div class="game-layout">
+          <div class="game-main-panel">
+            <div id="poem-info">
+              <h2 id="poem-title"></h2>
+              <p id="poem-author"></p>
             </div>
 
-            <div id="handwriting-container" class="handwriting-overlay hidden">
-                <div class="handwriting-board">
-                    <div class="board-header">
-                        <span>请在下方手写</span>
-                        <button id="hw-close-btn" class="close-icon">×</button>
-                    </div>
-                    <canvas id="handwriting-canvas" width="300" height="300"></canvas>
-                    <div id="hw-candidates" class="hw-candidates"></div>
-                    <div class="board-controls">
-                        <button id="hw-clear-btn" class="secondary-btn">重写</button>
-                        <button id="hw-confirm-btn" class="primary-btn">确认</button>
-                    </div>
-                </div>
+            <div id="poem-content" class="poem-container">
+              <!-- 诗句内容将在这里生成 -->
             </div>
 
             <div class="game-actions">
-                <button id="hint-char-btn" class="secondary-btn">提示一字</button>
-                <button id="hint-btn" class="secondary-btn">提示一句</button>
-                <button id="check-btn" class="primary-btn">检查答案</button>
+              <button id="hint-char-btn" class="secondary-btn">提示一字</button>
+              <button id="hint-btn" class="secondary-btn">提示一句</button>
+              <button id="check-btn" class="primary-btn">检查答案</button>
             </div>
 
-        <div id="message-area"></div>
+            <div id="message-area"></div>
+          </div>
+
+          <div id="handwriting-container" class="handwriting-overlay hidden">
+            <div class="handwriting-board">
+              <div class="board-header">
+                <span>请在下方手写</span>
+                <button id="hw-close-btn" class="close-icon">×</button>
+              </div>
+              <canvas id="handwriting-canvas" width="300" height="300"></canvas>
+              <div id="hw-candidates" class="hw-candidates"></div>
+              <div class="board-controls">
+                <button id="hw-undo-btn" class="secondary-btn">撤销</button>
+                <button id="hw-clear-btn" class="secondary-btn">重写</button>
+                <button id="hw-confirm-btn" class="primary-btn">确认</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="selection-pool" class="selection-pool hidden">
+          <!-- 待选字将在这里生成 -->
+        </div>
       </main>
     </div>
 

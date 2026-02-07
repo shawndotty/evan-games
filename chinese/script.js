@@ -71,6 +71,9 @@ function initGame() {
     .getElementById("hw-clear-btn")
     .addEventListener("click", clearHandwriting);
   document
+    .getElementById("hw-undo-btn")
+    .addEventListener("click", undoHandwriting);
+  document
     .getElementById("hw-confirm-btn")
     .addEventListener("click", recognizeHandwriting);
 
@@ -199,6 +202,26 @@ function clearHandwriting() {
   document.getElementById("hw-candidates").innerHTML = "";
 }
 
+function undoHandwriting() {
+  if (currentStrokes.length === 0) return;
+  currentStrokes.pop();
+
+  const canvas = document.getElementById("handwriting-canvas");
+  hwContext.clearRect(0, 0, canvas.width, canvas.height);
+
+  currentStrokes.forEach((stroke) => {
+    if (stroke.length === 0) return;
+    hwContext.beginPath();
+    hwContext.moveTo(stroke[0][0], stroke[0][1]);
+    for (let i = 1; i < stroke.length; i++) {
+      hwContext.lineTo(stroke[i][0], stroke[i][1]);
+    }
+    hwContext.stroke();
+  });
+
+  recognizeHandwriting();
+}
+
 function showHandwritingBoard() {
   document.getElementById("handwriting-container").classList.remove("hidden");
   clearHandwriting();
@@ -209,7 +232,11 @@ function hideHandwritingBoard() {
 }
 
 function recognizeHandwriting() {
-  if (currentStrokes.length === 0) return;
+  const candidatesDiv = document.getElementById("hw-candidates");
+  if (currentStrokes.length === 0) {
+    candidatesDiv.innerHTML = "";
+    return;
+  }
 
   if (typeof HanziLookup === "undefined") {
     alert("手写识别库加载失败，请检查网络");
@@ -219,8 +246,7 @@ function recognizeHandwriting() {
   const analyzedChar = new HanziLookup.AnalyzedCharacter(currentStrokes);
   const matcher = new HanziLookup.Matcher("mmah");
 
-  matcher.match(analyzedChar, 8, (matches) => {
-    const candidatesDiv = document.getElementById("hw-candidates");
+  matcher.match(analyzedChar, 21, (matches) => {
     candidatesDiv.innerHTML = "";
 
     matches.forEach((match) => {
@@ -287,6 +313,7 @@ function updateModeUI() {
   const positionSelect = document.getElementById("pool-position-select");
 
   if (currentMode === "select" || currentMode === "select_confused") {
+    document.body.classList.remove("mode-handwriting");
     pool.classList.remove("hidden");
     if (positionSelect) positionSelect.style.display = "inline-block";
     inputs.forEach((input) => {
@@ -294,12 +321,18 @@ function updateModeUI() {
     });
     generateSelectionPool();
   } else if (currentMode === "handwriting") {
+    document.body.classList.add("mode-handwriting");
     pool.classList.add("hidden");
     if (positionSelect) positionSelect.style.display = "none";
     inputs.forEach((input) => {
       input.setAttribute("readonly", "true"); // Prevent typing, force click to open HW board
     });
+    // Ensure board is in correct initial state (dimmed/visible but inactive)
+    // We rely on CSS handling .hidden class for dimming
+    // But we might want to ensure it is 'hidden' initially until focused
+    document.getElementById("handwriting-container").classList.add("hidden");
   } else {
+    document.body.classList.remove("mode-handwriting");
     pool.classList.add("hidden");
     if (positionSelect) positionSelect.style.display = "none";
     inputs.forEach((input) => input.removeAttribute("readonly"));
