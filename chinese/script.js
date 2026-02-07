@@ -179,6 +179,32 @@ let currentStroke = []; // Current stroke for HanziLookup
 let currentStrokeSys = []; // Current stroke for System API
 let lastPoint = null;
 let handwritingRecognizer = null; // System handwriting recognizer
+let currentTracingChar = ""; // Char to display as background for tracing
+
+function setTracingChar(char) {
+  currentTracingChar = char;
+  if (currentMode === "handwriting") {
+    clearHandwriting();
+  }
+}
+
+function drawTracingChar() {
+  if (!currentTracingChar || !hwContext) return;
+  const canvas = document.getElementById("handwriting-canvas");
+
+  hwContext.save();
+  hwContext.font = "300px Kaiti, STKaiti, KaiTi, serif";
+  hwContext.fillStyle = "rgba(0, 0, 0, 0.08)";
+  hwContext.textAlign = "center";
+  hwContext.textBaseline = "middle";
+  // Slightly adjust y to center visually (move up a bit)
+  hwContext.fillText(
+    currentTracingChar,
+    canvas.width / 2,
+    canvas.height / 2 - 20,
+  );
+  hwContext.restore();
+}
 
 async function initSystemHandwriting() {
   if (!("createHandwritingRecognizer" in navigator)) return;
@@ -318,6 +344,7 @@ function stopWriting() {
 function clearHandwriting() {
   const canvas = document.getElementById("handwriting-canvas");
   hwContext.clearRect(0, 0, canvas.width, canvas.height);
+  drawTracingChar();
   currentStrokes = [];
   currentStrokesSys = [];
   document.getElementById("hw-candidates").innerHTML = "";
@@ -330,6 +357,7 @@ function undoHandwriting() {
 
   const canvas = document.getElementById("handwriting-canvas");
   hwContext.clearRect(0, 0, canvas.width, canvas.height);
+  drawTracingChar();
 
   currentStrokes.forEach((stroke) => {
     if (stroke.length === 0) return;
@@ -890,7 +918,13 @@ function renderPoem() {
             focusNextInput(input);
           }
         });
-        input.addEventListener("input", (e) => handleInput(e, input));
+        input.addEventListener("input", (e) => {
+          handleInput(e, input);
+          // Only update tracing char if this input is still focused
+          if (document.activeElement === input) {
+            setTracingChar(input.value);
+          }
+        });
         input.addEventListener("keydown", (e) => handleKeydown(e, input));
 
         // Track focus
@@ -901,6 +935,7 @@ function renderPoem() {
             .forEach((el) => el.classList.remove("active-focus"));
           input.classList.add("active-focus");
           lastFocusedInput = input;
+          setTracingChar(input.value);
 
           // If in handwriting mode, show the board
           if (currentMode === "handwriting") {
@@ -981,13 +1016,29 @@ function handleInput(e, input) {
 }
 
 function handleKeydown(e, input) {
+  const isReadOnlyMode =
+    currentMode === "select" ||
+    currentMode === "select_confused" ||
+    currentMode === "handwriting";
+
+  if (e.key === "Delete") {
+    if (isReadOnlyMode) {
+      e.preventDefault();
+      input.value = "";
+      input.classList.remove("correct", "incorrect");
+      setTracingChar("");
+    }
+    return;
+  }
+
   if (e.key === "Backspace") {
-    if (currentMode === "select" || currentMode === "select_confused") {
+    if (isReadOnlyMode) {
       e.preventDefault(); // Prevent browser back navigation
       if (input.value !== "") {
         // If current input has content, clear it
         input.value = "";
         input.classList.remove("correct", "incorrect");
+        setTracingChar("");
       } else {
         // If current is empty, move to previous and clear it
         const inputs = Array.from(document.querySelectorAll(".char-input"));
@@ -997,6 +1048,7 @@ function handleKeydown(e, input) {
           prevInput.focus();
           prevInput.value = "";
           prevInput.classList.remove("correct", "incorrect");
+          setTracingChar("");
         }
       }
     } else {
