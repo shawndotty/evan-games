@@ -33,12 +33,6 @@ function initGame() {
     modeSelect.addEventListener("change", (e) => {
       currentMode = e.target.value;
       updateModeUI();
-      // Reset current poem inputs when switching modes
-      const inputs = document.querySelectorAll(".char-input");
-      inputs.forEach((input) => {
-        input.value = "";
-        input.classList.remove("correct", "incorrect");
-      });
     });
   }
 
@@ -73,9 +67,6 @@ function initGame() {
   document
     .getElementById("hw-undo-btn")
     .addEventListener("click", undoHandwriting);
-  document
-    .getElementById("hw-confirm-btn")
-    .addEventListener("click", recognizeHandwriting);
 
   // Initialize Handwriting Canvas
   initHandwritingCanvas();
@@ -85,11 +76,32 @@ function initGame() {
 
 let hwContext = null;
 let isWriting = false;
-let currentStrokes = []; // Array of strokes. Each stroke is array of [x, y]
-let currentStroke = []; // Current stroke being drawn
+let currentStrokes = []; // Array of strokes for HanziLookup (arrays of [x,y])
+let currentStrokesSys = []; // Array of strokes for System API (arrays of {x,y,t})
+let currentStroke = []; // Current stroke for HanziLookup
+let currentStrokeSys = []; // Current stroke for System API
 let lastPoint = null;
+let handwritingRecognizer = null; // System handwriting recognizer
+
+async function initSystemHandwriting() {
+  if (!("createHandwritingRecognizer" in navigator)) return;
+  try {
+    const constraint = { languages: ["zh-CN"] };
+    const supported = await navigator.queryHandwritingRecognizer(constraint);
+    if (supported) {
+      handwritingRecognizer =
+        await navigator.createHandwritingRecognizer(constraint);
+      console.log("System Handwriting Recognizer initialized");
+    }
+  } catch (e) {
+    console.error("System HW init failed", e);
+  }
+}
 
 function initHandwritingCanvas() {
+  // Initialize System Recognizer
+  initSystemHandwriting();
+
   const canvas = document.getElementById("handwriting-canvas");
   if (!canvas) return;
 
@@ -163,6 +175,7 @@ function startWriting(e) {
   const coords = getCanvasCoordinates(e, canvas);
   lastPoint = coords;
   currentStroke = [[coords.x, coords.y]];
+  currentStrokeSys = [{ x: coords.x, y: coords.y, t: Date.now() }];
 
   hwContext.beginPath();
   hwContext.moveTo(coords.x, coords.y);
@@ -177,6 +190,7 @@ function writing(e) {
   hwContext.stroke();
 
   currentStroke.push([coords.x, coords.y]);
+  currentStrokeSys.push({ x: coords.x, y: coords.y, t: Date.now() });
   lastPoint = coords;
 }
 
@@ -187,8 +201,10 @@ function stopWriting() {
 
   if (currentStroke.length > 0) {
     currentStrokes.push(currentStroke);
+    currentStrokesSys.push(currentStrokeSys);
   }
   currentStroke = [];
+  currentStrokeSys = [];
 
   // Auto-recognize after each stroke for better UX? Or wait for confirm?
   // Let's do auto-recognize to show candidates
@@ -199,12 +215,14 @@ function clearHandwriting() {
   const canvas = document.getElementById("handwriting-canvas");
   hwContext.clearRect(0, 0, canvas.width, canvas.height);
   currentStrokes = [];
+  currentStrokesSys = [];
   document.getElementById("hw-candidates").innerHTML = "";
 }
 
 function undoHandwriting() {
   if (currentStrokes.length === 0) return;
   currentStrokes.pop();
+  currentStrokesSys.pop();
 
   const canvas = document.getElementById("handwriting-canvas");
   hwContext.clearRect(0, 0, canvas.width, canvas.height);
@@ -231,40 +249,62 @@ function hideHandwritingBoard() {
   document.getElementById("handwriting-container").classList.add("hidden");
 }
 
-function recognizeHandwriting() {
+async function recognizeHandwriting() {
   const candidatesDiv = document.getElementById("hw-candidates");
   if (currentStrokes.length === 0) {
     candidatesDiv.innerHTML = "";
     return;
   }
 
-  if (typeof HanziLookup === "undefined") {
-    alert("手写识别库加载失败，请检查网络");
-    return;
+  candidatesDiv.innerHTML = "";
+  const existingCandidates = new Set();
+
+  const addCandidate = (char) => {
+    if (existingCandidates.has(char)) return;
+    existingCandidates.add(char);
+
+    const btn = document.createElement("div");
+    btn.className = "candidate-char";
+    btn.textContent = char;
+    btn.addEventListener("click", () => {
+      if (lastFocusedInput) {
+        lastFocusedInput.value = char;
+        // Trigger input logic
+        const event = new Event("input", { bubbles: true });
+        lastFocusedInput.dispatchEvent(event);
+        clearHandwriting();
+      }
+    });
+    candidatesDiv.appendChild(btn);
+  };
+
+  // 1. Try System Handwriting API
+  if (handwritingRecognizer && currentStrokesSys.length > 0) {
+    try {
+      const drawing = handwritingRecognizer.startDrawing();
+      for (const stroke of currentStrokesSys) {
+        drawing.addStroke(stroke);
+      }
+      const predictions = await drawing.getPrediction();
+      if (predictions && predictions.length > 0) {
+        predictions.forEach((p) => addCandidate(p.text));
+      }
+    } catch (e) {
+      console.error("System HW recognition failed", e);
+    }
   }
 
-  const analyzedChar = new HanziLookup.AnalyzedCharacter(currentStrokes);
-  const matcher = new HanziLookup.Matcher("mmah");
+  // 2. Fallback/Supplement with HanziLookup
+  if (typeof HanziLookup !== "undefined") {
+    const analyzedChar = new HanziLookup.AnalyzedCharacter(currentStrokes);
+    const matcher = new HanziLookup.Matcher("mmah");
 
-  matcher.match(analyzedChar, 21, (matches) => {
-    candidatesDiv.innerHTML = "";
-
-    matches.forEach((match) => {
-      const btn = document.createElement("div");
-      btn.className = "candidate-char";
-      btn.textContent = match.character;
-      btn.addEventListener("click", () => {
-        if (lastFocusedInput) {
-          lastFocusedInput.value = match.character;
-          // Trigger input logic
-          const event = new Event("input", { bubbles: true });
-          lastFocusedInput.dispatchEvent(event);
-          hideHandwritingBoard();
-        }
-      });
-      candidatesDiv.appendChild(btn);
+    matcher.match(analyzedChar, 21, (matches) => {
+      matches.forEach((match) => addCandidate(match.character));
     });
-  });
+  } else if (existingCandidates.size === 0) {
+    alert("手写识别库加载失败，请检查网络");
+  }
 }
 
 function updatePoolPosition(position) {
@@ -330,7 +370,23 @@ function updateModeUI() {
     // Ensure board is in correct initial state (dimmed/visible but inactive)
     // We rely on CSS handling .hidden class for dimming
     // But we might want to ensure it is 'hidden' initially until focused
-    document.getElementById("handwriting-container").classList.add("hidden");
+    // document.getElementById("handwriting-container").classList.add("hidden");
+
+    // Automatically focus the first available input to activate handwriting board
+    let targetInput = null;
+    if (lastFocusedInput && Array.from(inputs).includes(lastFocusedInput)) {
+      targetInput = lastFocusedInput;
+    } else {
+      // Find first empty
+      const empty = Array.from(inputs).find((input) => !input.value);
+      targetInput = empty || inputs[0];
+    }
+
+    if (targetInput) {
+      targetInput.focus();
+    } else {
+      document.getElementById("handwriting-container").classList.add("hidden");
+    }
   } else {
     document.body.classList.remove("mode-handwriting");
     pool.classList.add("hidden");
