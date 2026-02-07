@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>古诗词填词游戏</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>古诗词填词</h1>
+            <div class="controls">
+                <select id="difficulty-select">
+                    <option value="easy">简单 (Easy)</option>
+                    <option value="medium" selected>一般 (Medium)</option>
+                    <option value="hard">困难 (Hard)</option>
+                </select>
+                <button id="new-game-btn">换一首</button>
+            </div>
+        </header>
+
+        <main id="game-area">
+            <div id="poem-info">
+                <h2 id="poem-title"></h2>
+                <p id="poem-author"></p>
+            </div>
+            
+            <div id="poem-content" class="poem-container">
+                <!-- 诗句内容将在这里生成 -->
+            </div>
+
+            <div class="game-actions">
+                <button id="hint-btn" class="secondary-btn">提示一句</button>
+                <button id="check-btn" class="primary-btn">检查答案</button>
+            </div>
+
+            <div id="message-area"></div>
+        </main>
+    </div>
+
+    <script src="poems.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

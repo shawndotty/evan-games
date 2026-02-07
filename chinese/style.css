@@ -1,0 +1,204 @@
+:root {
+    --primary-color: #8b4513; /* SaddleBrown */
+    --secondary-color: #d2b48c; /* Tan */
+    --bg-color: #fdf5e6; /* OldLace */
+    --text-color: #333;
+    --success-color: #2e8b57;
+    --error-color: #cd5c5c;
+    --input-bg: #fff;
+}
+
+body {
+    font-family: "Kaiti", "STKaiti", "KaiTi", serif; /* 使用楷体更有古风感 */
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 800px;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIi8+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNjY2MiLz4KPC9zdmc+'); /* 简单的纹理 */
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 20px;
+}
+
+h1 {
+    margin: 0 0 20px 0;
+    font-size: 2.5em;
+    color: var(--primary-color);
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    align-items: center;
+}
+
+select {
+    padding: 8px 16px;
+    font-size: 1rem;
+    border: 1px solid var(--primary-color);
+    border-radius: 5px;
+    background-color: var(--input-bg);
+    font-family: inherit;
+    color: var(--primary-color);
+}
+
+button {
+    padding: 8px 20px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background-color 0.2s;
+}
+
+#new-game-btn {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+#new-game-btn:hover {
+    background-color: #69340e;
+}
+
+#poem-info {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+#poem-title {
+    font-size: 1.8em;
+    margin-bottom: 10px;
+}
+
+#poem-author {
+    font-size: 1.2em;
+    color: #666;
+}
+
+.poem-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    font-size: 1.5em;
+    margin-bottom: 30px;
+}
+
+.poem-line {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px;
+}
+
+.char-box {
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+    user-select: none;
+}
+
+.char-input {
+    width: 36px;
+    height: 36px;
+    font-size: 1em;
+    text-align: center;
+    border: 1px solid var(--primary-color);
+    border-radius: 4px;
+    background-color: #fff8dc;
+    font-family: inherit;
+    outline: none;
+}
+
+.char-input:focus {
+    box-shadow: 0 0 5px var(--secondary-color);
+}
+
+.char-input.correct {
+    background-color: #e0f0e0;
+    border-color: var(--success-color);
+    color: var(--success-color);
+}
+
+.char-input.incorrect {
+    background-color: #ffe0e0;
+    border-color: var(--error-color);
+}
+
+.game-actions {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.primary-btn {
+    background-color: var(--success-color);
+    color: white;
+    padding: 10px 30px;
+    font-size: 1.2em;
+}
+
+.primary-btn:hover {
+    background-color: #236b42;
+}
+
+.secondary-btn {
+    background-color: var(--secondary-color);
+    color: var(--primary-color);
+    padding: 10px 20px;
+}
+
+.secondary-btn:hover {
+    background-color: #c1a278;
+}
+
+#message-area {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 1.2em;
+    min-height: 1.5em;
+    color: var(--primary-color);
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 20px;
+    }
+    
+    h1 {
+        font-size: 1.8em;
+    }
+
+    .poem-container {
+        font-size: 1.2em;
+    }
+
+    .char-box, .char-input {
+        width: 30px;
+        height: 30px;
+        line-height: 30px;
+    }
+}
