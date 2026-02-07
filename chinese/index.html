@@ -12,6 +12,11 @@
       <header>
         <h1>古诗词填词</h1>
         <div class="controls">
+          <select id="library-select">
+            <option value="primary" selected>小学诗词 (Primary)</option>
+            <option value="tang300">唐诗三百首 (Tang Poems)</option>
+            <option value="song300">宋词三百首 (Song Ci)</option>
+          </select>
           <select id="mode-select">
             <option value="input" selected>输入模式 (Input)</option>
             <option value="select">普通选择模式 (Normal Selection)</option>
@@ -98,6 +103,8 @@
     </div>
 
     <script src="poems.js"></script>
+    <script src="tang300.js"></script>
+    <script src="song300.js"></script>
     <script src="confused_chars.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/gugray/HanziLookupJS@master/dist/hanzilookup.min.js"></script>

@@ -8,20 +8,65 @@ let handwritingCanvas = null; // Handwriting canvas instance
 let recentPoemIndices = []; // Track recently used poem indices
 const MAX_RECENT_HISTORY = 20; // Ensure no repeats within this many turns
 
-// Load poems from global variable (loaded via poems.js)
+// Load poems based on selection
 function loadPoems() {
-  if (typeof poemsData !== "undefined") {
-    poems = poemsData;
+  const librarySelect = document.getElementById("library-select");
+  const selectedLibrary = librarySelect ? librarySelect.value : "primary";
+
+  updatePoemsData(selectedLibrary);
+
+  if (poems.length > 0) {
     initGame();
   } else {
-    console.error("poemsData is not defined");
+    // If init failed, message is already set in updatePoemsData or below
+    if (!document.getElementById("message-area").textContent) {
+      document.getElementById("message-area").textContent = "加载诗词数据失败";
+    }
+  }
+}
+
+function updatePoemsData(libraryType) {
+  let newPoems = [];
+  if (libraryType === "primary" && typeof poemsPrimary !== "undefined") {
+    newPoems = poemsPrimary;
+  } else if (libraryType === "tang300" && typeof poemsTang !== "undefined") {
+    newPoems = poemsTang;
+  } else if (libraryType === "song300" && typeof poemsSong !== "undefined") {
+    newPoems = poemsSong;
+  } else if (typeof poemsData !== "undefined") {
+    // Fallback for backward compatibility if poemsData exists
+    newPoems = poemsData;
+  }
+
+  if (newPoems.length > 0) {
+    poems = newPoems;
+    recentPoemIndices = []; // Reset history when library changes
+  } else {
+    console.error(`Library ${libraryType} not found or empty`);
     document.getElementById("message-area").textContent =
-      "加载诗词数据失败，请确保 poems.js 文件存在";
+      `无法加载诗词库: ${libraryType}`;
+    poems = [];
   }
 }
 
 // Initialize game state
 function initGame() {
+  const librarySelect = document.getElementById("library-select");
+  if (librarySelect) {
+    librarySelect.addEventListener("change", (e) => {
+      updatePoemsData(e.target.value);
+      if (poems.length > 0) {
+        startNewGame();
+        // Also update search list if modal is open (optional but good UX)
+        // But renderPoemList reads global `poems`, so we just need to re-render if open
+        const modal = document.getElementById("poem-picker-modal");
+        if (modal && !modal.classList.contains("hidden")) {
+          renderPoemList(document.getElementById("poem-search").value);
+        }
+      }
+    });
+  }
+
   const difficultySelect = document.getElementById("difficulty-select");
   if (difficultySelect) {
     difficultySelect.addEventListener("change", (e) => {
