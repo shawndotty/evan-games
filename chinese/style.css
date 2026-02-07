@@ -20,13 +20,14 @@ body {
 }
 
 .container {
-    max-width: 800px;
-    width: 100%;
+    max-width: 1400px;
+    width: 90%;
     background-color: rgba(255, 255, 255, 0.8);
     padding: 40px;
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIi8+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNjY2MiLz4KPC9zdmc+'); /* 简单的纹理 */
+    transition: margin 0.3s, width 0.3s, padding 0.3s;
 }
 
 header {
@@ -38,7 +39,7 @@ header {
 
 h1 {
     margin: 0 0 20px 0;
-    font-size: 2.5em;
+    font-size: clamp(2rem, 4vw, 3.5rem);
     color: var(--primary-color);
 }
 
@@ -98,7 +99,7 @@ button {
     flex-direction: column;
     align-items: center;
     gap: 15px;
-    font-size: 1.5em;
+    font-size: clamp(1.2rem, 2.5vw, 2.2rem);
     margin-bottom: 30px;
 }
 
@@ -110,9 +111,9 @@ button {
 }
 
 .char-box {
-    width: 40px;
-    height: 40px;
-    line-height: 40px;
+    width: 2em;
+    height: 2em;
+    line-height: 2em;
     text-align: center;
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -121,8 +122,8 @@ button {
 }
 
 .char-input {
-    width: 36px;
-    height: 36px;
+    width: 1.8em;
+    height: 1.8em;
     font-size: 1em;
     text-align: center;
     border: 1px solid var(--primary-color);
@@ -201,6 +202,7 @@ button {
     box-sizing: border-box;
     transition: all 0.3s ease-in-out;
     overflow-y: auto; /* Allow scrolling if content overflows */
+    font-size: clamp(1rem, 1.5vw, 1.5rem);
 }
 
 /* Position: Bottom (Default) */
@@ -216,7 +218,7 @@ body.pool-bottom .selection-pool {
 }
 
 body.pool-bottom .container {
-    padding-bottom: 160px; /* Space for bottom pool */
+    padding-bottom: 35vh; /* Space for bottom pool (max-height 30vh) */
 }
 
 /* Position: Left */
@@ -235,7 +237,6 @@ body.pool-left .selection-pool {
 body.pool-left .container {
     margin-left: 200px; /* Push content right */
     width: calc(100% - 200px); /* Adjust width */
-    max-width: 800px; /* Keep max-width constraint */
 }
 
 /* Position: Right */
@@ -254,7 +255,6 @@ body.pool-right .selection-pool {
 body.pool-right .container {
     margin-right: 200px; /* Push content left */
     width: calc(100% - 200px);
-    max-width: 800px;
 }
 
 .selection-pool.hidden {
@@ -262,9 +262,9 @@ body.pool-right .container {
 }
 
 .pool-char {
-    width: 45px;
-    height: 45px;
-    font-size: 1.5rem;
+    width: 2.5em;
+    height: 2.5em;
+    font-size: 1em;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -311,13 +311,15 @@ body.pool-right .container {
         border-left: none !important;
         border-right: none !important;
         flex-direction: row !important;
+        
+        font-size: 0.9rem; /* Smaller pool font */
     }
     
     .container {
         margin-left: 0 !important;
         margin-right: 0 !important;
         width: 100% !important;
-        padding-bottom: 140px !important;
+        padding-bottom: 35vh !important;
     }
     
     h1 {
@@ -325,23 +327,11 @@ body.pool-right .container {
     }
 
     .poem-container {
-        font-size: 1.2em;
+        font-size: 1rem;
     }
 
-    .char-box, .char-input {
-        width: 30px;
-        height: 30px;
-        line-height: 30px;
-    }
-    
     .selection-pool {
         gap: 8px;
-    }
-    
-    .pool-char {
-        width: 36px;
-        height: 36px;
-        font-size: 1.2rem;
     }
 }
 
