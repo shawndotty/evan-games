@@ -108,7 +108,7 @@ function updateModeUI() {
   const inputs = document.querySelectorAll(".char-input");
   const positionSelect = document.getElementById("pool-position-select");
 
-  if (currentMode === "select") {
+  if (currentMode === "select" || currentMode === "select_confused") {
     pool.classList.remove("hidden");
     if (positionSelect) positionSelect.style.display = "inline-block";
     inputs.forEach((input) => {
@@ -130,7 +130,14 @@ function generateSelectionPool() {
   if (blanks.length === 0) return;
 
   // Get all correct characters from blanks
-  const chars = blanks.map((b) => b.correctChar);
+  let chars = blanks.map((b) => b.correctChar);
+
+  // If in Confused Mode, add distractors
+  if (currentMode === "select_confused") {
+    const distractorCount = Math.max(1, Math.floor(chars.length * 0.5));
+    const distractors = generateDistractors(chars, distractorCount);
+    chars = chars.concat(distractors);
+  }
 
   // Shuffle logic
   for (let i = chars.length - 1; i > 0; i--) {
@@ -145,6 +152,77 @@ function generateSelectionPool() {
     btn.addEventListener("click", () => handlePoolSelection(char));
     pool.appendChild(btn);
   });
+}
+
+function generateDistractors(correctChars, count) {
+  const distractors = [];
+
+  // 1. Try to find specific confused chars first
+  correctChars.forEach((char) => {
+    if (distractors.length < count) {
+      const confused = getConfusedChar(char);
+      if (
+        confused &&
+        !correctChars.includes(confused) &&
+        !distractors.includes(confused)
+      ) {
+        distractors.push(confused);
+      }
+    }
+  });
+
+  // 2. Fill remaining with random chars from other poems
+  while (distractors.length < count) {
+    const randomChar = getRandomCharFromPoems();
+    if (
+      randomChar &&
+      !correctChars.includes(randomChar) &&
+      !distractors.includes(randomChar)
+    ) {
+      distractors.push(randomChar);
+    }
+  }
+
+  return distractors;
+}
+
+// Global confusedMap loaded from confused_chars.js
+let confusedMap = {};
+
+if (typeof confusedMapData !== "undefined") {
+  confusedMap = confusedMapData;
+} else {
+  console.warn(
+    "confusedMapData is not defined. Confused selection mode might not work optimally.",
+  );
+}
+
+function getConfusedChar(char) {
+  if (confusedMap[char]) {
+    // Return a random one from the list
+    const list = confusedMap[char];
+    return list[Math.floor(Math.random() * list.length)];
+  }
+  return null;
+}
+
+function getRandomCharFromPoems() {
+  if (!poems || poems.length === 0) return "中";
+
+  // Pick a random poem
+  const randomPoem = poems[Math.floor(Math.random() * poems.length)];
+  if (!randomPoem || !randomPoem.content) return "中";
+
+  // Pick a random line
+  const randomLine =
+    randomPoem.content[Math.floor(Math.random() * randomPoem.content.length)];
+  if (!randomLine) return "中";
+
+  // Pick a random char
+  const char = randomLine[Math.floor(Math.random() * randomLine.length)];
+
+  if (isChineseChar(char)) return char;
+  return getRandomCharFromPoems(); // Try again if not chinese char (unlikely but safe)
 }
 
 // Handle selection from pool
@@ -322,7 +400,7 @@ function handleInput(e, input) {
 
 function handleKeydown(e, input) {
   if (e.key === "Backspace") {
-    if (currentMode === "select") {
+    if (currentMode === "select" || currentMode === "select_confused") {
       e.preventDefault(); // Prevent browser back navigation
       if (input.value !== "") {
         // If current input has content, clear it
