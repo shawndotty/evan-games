@@ -11,6 +11,10 @@
         <header>
             <h1>古诗词填词</h1>
             <div class="controls">
+                <select id="mode-select">
+                    <option value="input" selected>输入模式 (Input)</option>
+                    <option value="select">选择模式 (Selection)</option>
+                </select>
                 <select id="difficulty-select">
                     <option value="easy">简单 (Easy)</option>
                     <option value="medium" selected>一般 (Medium)</option>
@@ -28,6 +32,10 @@
             
             <div id="poem-content" class="poem-container">
                 <!-- 诗句内容将在这里生成 -->
+            </div>
+
+            <div id="selection-pool" class="selection-pool hidden">
+                <!-- 待选字将在这里生成 -->
             </div>
 
             <div class="game-actions">

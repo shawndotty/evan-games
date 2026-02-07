@@ -1,5 +1,6 @@
 let poems = [];
 let currentPoem = null;
+let currentMode = "input"; // "input" or "select"
 let currentDifficulty = "medium";
 let blanks = []; // Stores {lineIndex, charIndex, correctChar, inputElement}
 let lastFocusedInput = null; // Track the last focused input for handwriting insertion
@@ -23,6 +24,12 @@ function initGame() {
   difficultySelect.addEventListener("change", (e) => {
     currentDifficulty = e.target.value;
     startNewGame();
+  });
+
+  const modeSelect = document.getElementById("mode-select");
+  modeSelect.addEventListener("change", (e) => {
+    currentMode = e.target.value;
+    updateModeUI();
   });
 
   document
@@ -62,6 +69,73 @@ function insertCharacter(char) {
     const msgArea = document.getElementById("message-area");
     msgArea.textContent = "请先点击选中一个填空格子";
     msgArea.style.color = "var(--primary-color)";
+  }
+}
+
+// Update UI based on current mode
+function updateModeUI() {
+  const pool = document.getElementById("selection-pool");
+  const inputs = document.querySelectorAll(".char-input");
+
+  if (currentMode === "select") {
+    pool.classList.remove("hidden");
+    inputs.forEach((input) => {
+      input.setAttribute("readonly", "true");
+    });
+    generateSelectionPool();
+  } else {
+    pool.classList.add("hidden");
+    inputs.forEach((input) => input.removeAttribute("readonly"));
+  }
+}
+
+// Generate selection pool for select mode
+function generateSelectionPool() {
+  const pool = document.getElementById("selection-pool");
+  pool.innerHTML = "";
+
+  if (blanks.length === 0) return;
+
+  // Get all correct characters from blanks
+  const chars = blanks.map((b) => b.correctChar);
+
+  // Shuffle logic
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+
+  chars.forEach((char) => {
+    const btn = document.createElement("div");
+    btn.className = "pool-char";
+    btn.textContent = char;
+    btn.addEventListener("click", () => handlePoolSelection(char));
+    pool.appendChild(btn);
+  });
+}
+
+// Handle selection from pool
+function handlePoolSelection(char) {
+  // If no input is focused, try to find the first empty one
+  if (!lastFocusedInput) {
+    const emptyBlank = blanks.find((b) => !b.element.value);
+    if (emptyBlank) {
+      lastFocusedInput = emptyBlank.element;
+      lastFocusedInput.focus();
+    } else if (blanks.length > 0) {
+      // If all full, default to first
+      lastFocusedInput = blanks[0].element;
+      lastFocusedInput.focus();
+    }
+  }
+
+  if (lastFocusedInput) {
+    lastFocusedInput.value = char;
+    lastFocusedInput.classList.remove("incorrect");
+    lastFocusedInput.classList.remove("correct");
+
+    // Auto jump to next
+    focusNextInput(lastFocusedInput);
   }
 }
 
@@ -168,6 +242,8 @@ function renderPoem() {
       blanks[0].element.focus();
     }, 100);
   }
+
+  updateModeUI();
 }
 
 // Determine which characters to hide based on difficulty
