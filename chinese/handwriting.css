@@ -18,8 +18,8 @@
     flex-direction: column;
     align-items: center;
     gap: 15px;
-    width: 340px; /* Slightly wider than canvas */
-    max-width: 90%;
+    width: 400px; /* Increased to fit larger canvas */
+    max-width: 95%;
 }
 
 .board-header {
@@ -40,6 +40,14 @@
     background-color: #fff8dc; /* Consistent with input bg */
     cursor: crosshair;
     touch-action: none; /* Prevent scrolling while writing */
+    
+    /* Mi-character grid (米字格) background */
+    background-image: 
+        linear-gradient(to right, transparent 49.5%, rgba(200, 0, 0, 0.2) 49.5%, rgba(200, 0, 0, 0.2) 50.5%, transparent 50.5%), /* Vertical */
+        linear-gradient(to bottom, transparent 49.5%, rgba(200, 0, 0, 0.2) 49.5%, rgba(200, 0, 0, 0.2) 50.5%, transparent 50.5%), /* Horizontal */
+        linear-gradient(45deg, transparent 49.5%, rgba(200, 0, 0, 0.2) 49.5%, rgba(200, 0, 0, 0.2) 50.5%, transparent 50.5%), /* Diagonal 1 */
+        linear-gradient(-45deg, transparent 49.5%, rgba(200, 0, 0, 0.2) 49.5%, rgba(200, 0, 0, 0.2) 50.5%, transparent 50.5%); /* Diagonal 2 */
+    background-size: 100% 100%;
 }
 
 .hw-candidates {
@@ -123,7 +131,7 @@ body.mode-handwriting .handwriting-overlay.hidden {
 body.mode-handwriting .handwriting-board {
     box-shadow: none;
     border: 2px solid var(--secondary-color);
-    width: 340px; /* Fixed width for the panel */
+    width: 400px; /* Fixed width for the panel */
     margin: 0;
 }
 
@@ -143,7 +151,7 @@ body.mode-handwriting #hw-close-btn {
     
     body.mode-handwriting .handwriting-board {
         width: 100%;
-        max-width: 340px;
+        max-width: 400px;
         margin-top: 20px;
     }
 }
