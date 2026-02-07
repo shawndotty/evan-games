@@ -135,12 +135,13 @@ body.mode-handwriting .game-main-panel {
 
 /* Transform overlay to side panel */
 body.mode-handwriting .handwriting-overlay {
-    /* position: static !important; */ /* Default is static now */
+    position: sticky !important;
+    top: 100px;
     width: auto !important;
     height: auto !important;
     background-color: transparent !important;
     display: block !important; /* Always show in layout flow */
-    z-index: auto;
+    z-index: 10;
 }
 
 /* Handle visibility/interactivity in side-panel mode */

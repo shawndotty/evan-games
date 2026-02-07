@@ -117,7 +117,7 @@ button {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 5px;
+    gap: 8px;
 }
 
 .char-box {
@@ -132,8 +132,8 @@ button {
 }
 
 .char-input {
-    width: 1.8em;
-    height: 1.8em;
+    width: 2em;
+    height: 2em;
     font-size: 1em;
     text-align: center;
     border: 1px solid var(--primary-color);
@@ -141,6 +141,7 @@ button {
     background-color: #fff8dc;
     font-family: inherit;
     outline: none;
+    padding: 0;
 }
 
 .char-input:focus,
