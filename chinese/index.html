@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>古诗词填词游戏</title>
     <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="handwriting.css" />
   </head>
   <body>
     <div class="container">
@@ -17,6 +18,7 @@
             <option value="select_confused">
               混淆选择模式 (Confused Selection)
             </option>
+            <option value="handwriting">手写模式 (Handwriting)</option>
           </select>
           <select id="pool-position-select" style="display: none">
             <option value="bottom" selected>面板：底部</option>
@@ -43,10 +45,25 @@
         </div>
 
         <div id="selection-pool" class="selection-pool hidden">
-          <!-- 待选字将在这里生成 -->
-        </div>
+                <!-- 待选字将在这里生成 -->
+            </div>
 
-        <div class="game-actions">
+            <div id="handwriting-container" class="handwriting-overlay hidden">
+                <div class="handwriting-board">
+                    <div class="board-header">
+                        <span>请在下方手写</span>
+                        <button id="hw-close-btn" class="close-icon">×</button>
+                    </div>
+                    <canvas id="handwriting-canvas" width="300" height="300"></canvas>
+                    <div id="hw-candidates" class="hw-candidates"></div>
+                    <div class="board-controls">
+                        <button id="hw-clear-btn" class="secondary-btn">重写</button>
+                        <button id="hw-confirm-btn" class="primary-btn">确认</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-actions">
                 <button id="hint-char-btn" class="secondary-btn">提示一字</button>
                 <button id="hint-btn" class="secondary-btn">提示一句</button>
                 <button id="check-btn" class="primary-btn">检查答案</button>
@@ -59,6 +76,7 @@
     <script src="poems.js"></script>
     <script src="confused_chars.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/gugray/HanziLookupJS@master/dist/hanzilookup.min.js"></script>
     <script src="script.js"></script>
   </body>
 </html>

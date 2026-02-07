@@ -63,7 +63,182 @@ function initGame() {
     .getElementById("hint-char-btn")
     .addEventListener("click", showCharHint);
 
+  // Handwriting UI events
+  document
+    .getElementById("hw-close-btn")
+    .addEventListener("click", hideHandwritingBoard);
+  document
+    .getElementById("hw-clear-btn")
+    .addEventListener("click", clearHandwriting);
+  document
+    .getElementById("hw-confirm-btn")
+    .addEventListener("click", recognizeHandwriting);
+
+  // Initialize Handwriting Canvas
+  initHandwritingCanvas();
+
   startNewGame();
+}
+
+let hwContext = null;
+let isWriting = false;
+let currentStrokes = []; // Array of strokes. Each stroke is array of [x, y]
+let currentStroke = []; // Current stroke being drawn
+let lastPoint = null;
+
+function initHandwritingCanvas() {
+  const canvas = document.getElementById("handwriting-canvas");
+  if (!canvas) return;
+
+  hwContext = canvas.getContext("2d");
+  hwContext.lineWidth = 5;
+  hwContext.lineCap = "round";
+  hwContext.lineJoin = "round";
+  hwContext.strokeStyle = "#000";
+
+  // Mouse events
+  canvas.addEventListener("mousedown", startWriting);
+  canvas.addEventListener("mousemove", writing);
+  canvas.addEventListener("mouseup", stopWriting);
+  canvas.addEventListener("mouseleave", stopWriting);
+
+  // Touch events
+  canvas.addEventListener(
+    "touchstart",
+    (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      startWriting({ clientX: touch.clientX, clientY: touch.clientY });
+    },
+    { passive: false },
+  );
+
+  canvas.addEventListener(
+    "touchmove",
+    (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      writing({ clientX: touch.clientX, clientY: touch.clientY });
+    },
+    { passive: false },
+  );
+
+  canvas.addEventListener(
+    "touchend",
+    (e) => {
+      e.preventDefault();
+      stopWriting();
+    },
+    { passive: false },
+  );
+
+  // Initialize HanziLookup
+  if (typeof HanziLookup !== "undefined") {
+    HanziLookup.init(
+      "mmah",
+      "https://cdn.jsdelivr.net/gh/gugray/HanziLookupJS@master/dist/mmah.json",
+      (success) => {
+        if (!success) {
+          console.error("Failed to load HanziLookup data");
+        }
+      },
+    );
+  }
+}
+
+function getCanvasCoordinates(e, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top,
+  };
+}
+
+function startWriting(e) {
+  isWriting = true;
+  const canvas = document.getElementById("handwriting-canvas");
+  const coords = getCanvasCoordinates(e, canvas);
+  lastPoint = coords;
+  currentStroke = [[coords.x, coords.y]];
+
+  hwContext.beginPath();
+  hwContext.moveTo(coords.x, coords.y);
+}
+
+function writing(e) {
+  if (!isWriting) return;
+  const canvas = document.getElementById("handwriting-canvas");
+  const coords = getCanvasCoordinates(e, canvas);
+
+  hwContext.lineTo(coords.x, coords.y);
+  hwContext.stroke();
+
+  currentStroke.push([coords.x, coords.y]);
+  lastPoint = coords;
+}
+
+function stopWriting() {
+  if (!isWriting) return;
+  isWriting = false;
+  hwContext.closePath();
+
+  if (currentStroke.length > 0) {
+    currentStrokes.push(currentStroke);
+  }
+  currentStroke = [];
+
+  // Auto-recognize after each stroke for better UX? Or wait for confirm?
+  // Let's do auto-recognize to show candidates
+  recognizeHandwriting();
+}
+
+function clearHandwriting() {
+  const canvas = document.getElementById("handwriting-canvas");
+  hwContext.clearRect(0, 0, canvas.width, canvas.height);
+  currentStrokes = [];
+  document.getElementById("hw-candidates").innerHTML = "";
+}
+
+function showHandwritingBoard() {
+  document.getElementById("handwriting-container").classList.remove("hidden");
+  clearHandwriting();
+}
+
+function hideHandwritingBoard() {
+  document.getElementById("handwriting-container").classList.add("hidden");
+}
+
+function recognizeHandwriting() {
+  if (currentStrokes.length === 0) return;
+
+  if (typeof HanziLookup === "undefined") {
+    alert("手写识别库加载失败，请检查网络");
+    return;
+  }
+
+  const analyzedChar = new HanziLookup.AnalyzedCharacter(currentStrokes);
+  const matcher = new HanziLookup.Matcher("mmah");
+
+  matcher.match(analyzedChar, 8, (matches) => {
+    const candidatesDiv = document.getElementById("hw-candidates");
+    candidatesDiv.innerHTML = "";
+
+    matches.forEach((match) => {
+      const btn = document.createElement("div");
+      btn.className = "candidate-char";
+      btn.textContent = match.character;
+      btn.addEventListener("click", () => {
+        if (lastFocusedInput) {
+          lastFocusedInput.value = match.character;
+          // Trigger input logic
+          const event = new Event("input", { bubbles: true });
+          lastFocusedInput.dispatchEvent(event);
+          hideHandwritingBoard();
+        }
+      });
+      candidatesDiv.appendChild(btn);
+    });
+  });
 }
 
 function updatePoolPosition(position) {
@@ -118,6 +293,12 @@ function updateModeUI() {
       input.setAttribute("readonly", "true");
     });
     generateSelectionPool();
+  } else if (currentMode === "handwriting") {
+    pool.classList.add("hidden");
+    if (positionSelect) positionSelect.style.display = "none";
+    inputs.forEach((input) => {
+      input.setAttribute("readonly", "true"); // Prevent typing, force click to open HW board
+    });
   } else {
     pool.classList.add("hidden");
     if (positionSelect) positionSelect.style.display = "none";
@@ -327,6 +508,11 @@ function renderPoem() {
             .forEach((el) => el.classList.remove("active-focus"));
           input.classList.add("active-focus");
           lastFocusedInput = input;
+
+          // If in handwriting mode, show the board
+          if (currentMode === "handwriting") {
+            showHandwritingBoard();
+          }
         });
 
         lineEl.appendChild(input);
