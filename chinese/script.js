@@ -170,6 +170,21 @@ function initGame() {
     });
   }
 
+  const hwPinyinBtn = document.getElementById("hw-pinyin-btn");
+  if (hwPinyinBtn) {
+    hwPinyinBtn.addEventListener("click", () => {
+      if (lastFocusedInput && lastFocusedInput.value) {
+        showPinyinDefinition(lastFocusedInput.value);
+      } else {
+        const msgArea = document.getElementById("message-area");
+        if (msgArea) {
+          msgArea.textContent = "请先选中一个有字的格子";
+          msgArea.style.color = "var(--primary-color)";
+        }
+      }
+    });
+  }
+
   const closeStrokeModal = document.querySelector(".close-stroke-modal");
   if (closeStrokeModal) {
     closeStrokeModal.addEventListener("click", () => {
@@ -483,7 +498,7 @@ async function recognizeHandwriting() {
     const analyzedChar = new HanziLookup.AnalyzedCharacter(currentStrokes);
     const matcher = new HanziLookup.Matcher("mmah");
 
-    matcher.match(analyzedChar, 16, (matches) => {
+    matcher.match(analyzedChar, 24, (matches) => {
       matches.forEach((match) => addCandidate(match.character));
     });
   } else if (existingCandidates.size === 0) {
@@ -1080,21 +1095,117 @@ function showStrokeOrder(char) {
   });
 }
 
+function showPinyinDefinition(char) {
+  const display = document.getElementById("stroke-text-display");
+  if (!display) return;
+
+  display.classList.remove("hidden");
+  display.style.display = "block";
+  display.innerHTML = "正在加载...";
+
+  requestAnimationFrame(() => {
+    display.innerHTML = "";
+
+    const container = document.createElement("div");
+    container.className = "pinyin-def-container";
+    container.style.padding = "10px";
+    container.style.textAlign = "left";
+    container.style.backgroundColor = "#fff";
+    container.style.borderRadius = "5px";
+    container.style.border = "1px solid #ddd";
+
+    // Large Char
+    const charDiv = document.createElement("div");
+    charDiv.style.fontSize = "3em";
+    charDiv.style.textAlign = "center";
+    charDiv.style.marginBottom = "10px";
+    charDiv.style.color = "var(--primary-color)";
+    charDiv.textContent = char;
+    container.appendChild(charDiv);
+
+    // Pinyin
+    const pinyinDiv = document.createElement("div");
+    pinyinDiv.style.fontSize = "1.2em";
+    pinyinDiv.style.marginBottom = "8px";
+    let pinyin = "";
+    if (typeof cnchar !== "undefined" && cnchar.spell) {
+      pinyin = cnchar.spell(char, "tone");
+    }
+    pinyinDiv.innerHTML = `<strong>拼音：</strong>${pinyin || "未知"}`;
+    container.appendChild(pinyinDiv);
+
+    // Explanation
+    const explainDiv = document.createElement("div");
+    explainDiv.style.fontSize = "1em";
+    explainDiv.style.lineHeight = "1.5";
+    explainDiv.style.maxHeight = "300px";
+    explainDiv.style.overflowY = "auto";
+
+    let explanation = "";
+    let errorMsg = "";
+
+    if (typeof cnchar === "undefined") {
+      errorMsg = "cnchar 库未加载";
+    } else if (!cnchar.explain) {
+      errorMsg = "cnchar-explanation 插件未加载";
+    } else {
+      try {
+        explanation = cnchar.explain(char);
+      } catch (e) {
+        errorMsg = "查询出错: " + e.message;
+      }
+    }
+
+    // Format explanation if it's a string (replace newlines with br)
+    if (explanation) {
+      if (typeof explanation === "string") {
+        explanation = explanation.replace(/\n/g, "<br>");
+      } else {
+        explanation = JSON.stringify(explanation);
+      }
+    } else {
+      // If no explanation found but no error, it means the char is not in db
+      if (!errorMsg) errorMsg = "未找到该字释义";
+    }
+
+    if (explanation) {
+      explainDiv.innerHTML = `<strong>释义：</strong><br>${explanation}`;
+    } else {
+      explainDiv.innerHTML = `<span style="color:red;">${errorMsg}</span><br><small>提示：本地打开HTML可能导致部分数据无法加载，请尝试使用本地服务器(Live Server)运行。</small>`;
+    }
+
+    container.appendChild(explainDiv);
+
+    display.appendChild(container);
+  });
+}
+
 function updateStrokeBtnVisibility() {
   const btn = document.getElementById("hw-stroke-btn");
+  const pinyinBtn = document.getElementById("hw-pinyin-btn");
   const display = document.getElementById("stroke-text-display");
-  if (!btn) return;
 
-  if (
-    currentMode === "handwriting" &&
-    lastFocusedInput &&
-    lastFocusedInput.value
-  ) {
-    btn.classList.remove("hidden");
-    btn.style.display = "inline-block"; // Ensure visibility even if CSS fails
-  } else {
-    btn.classList.add("hidden");
-    btn.style.display = "none"; // Ensure hidden
+  const isValid =
+    currentMode === "handwriting" && lastFocusedInput && lastFocusedInput.value;
+
+  if (btn) {
+    if (isValid) {
+      btn.classList.remove("hidden");
+      btn.style.display = "inline-block";
+    } else {
+      btn.classList.add("hidden");
+      btn.style.display = "none";
+    }
+  }
+
+  if (pinyinBtn) {
+    if (isValid) {
+      pinyinBtn.classList.remove("hidden");
+      pinyinBtn.style.display = "inline-block";
+    } else {
+      pinyinBtn.classList.add("hidden");
+      pinyinBtn.style.display = "none";
+    }
   }
 
   // Always hide the display when state updates.
