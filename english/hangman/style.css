@@ -138,7 +138,7 @@ select:hover {
     box-shadow: 0 6px 0 rgba(0,0,0,0.05);
     display: flex;
     flex-direction: column;
-    justify-content: flex-start; /* Changed from center to allow stacking */
+    justify-content: center; /* Changed from center to allow stacking */
     align-items: center;
     position: relative;
     border: 2px solid #fff;
@@ -176,7 +176,7 @@ h2 {
     background-color: var(--accent-color);
     border: none;
     border-radius: 0.8rem;
-    font-size: 1.5rem;
+    font-size: 2.5rem;
     font-weight: bold;
     color: var(--text-color);
     cursor: pointer;
