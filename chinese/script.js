@@ -95,8 +95,32 @@ function initGame() {
     updateModeUI();
 
     modeSelect.addEventListener("change", (e) => {
-      currentMode = e.target.value;
+      const newMode = e.target.value;
+
+      // Warning when switching to or from sort mode
+      if (currentMode === "sort" || newMode === "sort") {
+        e.preventDefault(); // Prevent implicit change logic if any, though select value changed already
+
+        // Revert visual selection first
+        e.target.value = currentMode;
+
+        showConfirmModal("切换模式将重置当前进度的输入记录，是否继续？", () => {
+          currentMode = newMode;
+          modeSelect.value = newMode; // Set to new mode visually
+          updateModeUI();
+          renderPoem();
+        });
+        return;
+      }
+
+      currentMode = newMode;
       updateModeUI();
+
+      // If switching to sort mode, we must re-render to show the shuffled poem
+      // If switching FROM sort mode, we must re-render to show the normal input boxes
+      if (currentMode === "sort" || currentMode !== "sort") {
+        renderPoem();
+      }
     });
   }
 
@@ -580,10 +604,7 @@ function updateModeUI() {
     inputs.forEach((input) => {
       input.setAttribute("readonly", "true"); // Prevent typing, force click to open HW board
     });
-    // Ensure board is in correct initial state (dimmed/visible but inactive)
-    // We rely on CSS handling .hidden class for dimming
-    // But we might want to ensure it is 'hidden' initially until focused
-    // document.getElementById("handwriting-container").classList.add("hidden");
+    // ... (rest of handwriting logic) ...
 
     // Automatically focus the first available input to activate handwriting board
     let targetInput = null;
@@ -600,13 +621,26 @@ function updateModeUI() {
     } else {
       document.getElementById("handwriting-container").classList.add("hidden");
     }
-  } else {
+  } else if (currentMode === "sort") {
+    // Sort Mode UI
     document.body.classList.remove("mode-handwriting");
     document.body.classList.remove("pool-visible");
     document.getElementById("handwriting-container").classList.add("hidden");
     pool.classList.add("hidden");
     if (positionSelect) positionSelect.style.display = "none";
-    inputs.forEach((input) => input.removeAttribute("readonly"));
+    // Inputs are not used in sort mode (divs are used), but if any exist, disable them
+    inputs.forEach((input) => input.setAttribute("disabled", "true"));
+  } else {
+    // Input Mode
+    document.body.classList.remove("mode-handwriting");
+    document.body.classList.remove("pool-visible");
+    document.getElementById("handwriting-container").classList.add("hidden");
+    pool.classList.add("hidden");
+    if (positionSelect) positionSelect.style.display = "none";
+    inputs.forEach((input) => {
+      input.removeAttribute("readonly");
+      input.removeAttribute("disabled");
+    });
   }
 
   updateStrokeBtnVisibility();
@@ -643,7 +677,6 @@ function generateSelectionPool() {
     pool.appendChild(btn);
   });
 
-  // Mark existing values as used (in case switching modes with filled inputs)
   blanks.forEach((blank) => {
     if (blank.element.value) {
       togglePoolChar(blank.element.value, true);
@@ -979,6 +1012,12 @@ function closePoemPicker() {
 }
 
 function restartCurrentGame() {
+  if (currentMode === "sort") {
+    renderPoem();
+    document.getElementById("message-area").textContent = "";
+    return;
+  }
+
   if (blanks.length === 0) return;
 
   // Clear all inputs
@@ -1182,6 +1221,179 @@ function updateStrokeBtnVisibility() {
   }
 }
 
+// Shuffle array utility
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+let dragSrcEl = null;
+let selectedSortChar = null;
+
+function handleDragStart(e) {
+  dragSrcEl = this;
+  e.dataTransfer.effectAllowed = "move";
+  e.dataTransfer.setData("text/html", this.innerHTML);
+  this.classList.add("dragging");
+  if (selectedSortChar) {
+    selectedSortChar.classList.remove("selected");
+    selectedSortChar = null;
+  }
+}
+
+function handleDragOver(e) {
+  if (e.preventDefault) {
+    e.preventDefault();
+  }
+  e.dataTransfer.dropEffect = "move";
+
+  const target = e.target;
+
+  // Basic checks: target must be a different sort-char in the same container
+  if (
+    target === dragSrcEl ||
+    !target.classList.contains("sort-char") ||
+    target.parentNode !== dragSrcEl.parentNode
+  ) {
+    return false;
+  }
+
+  const container = dragSrcEl.parentNode;
+  const rect = target.getBoundingClientRect();
+  // Determine if we are hovering the right half of the target
+  const next = (e.clientX - rect.left) / (rect.right - rect.left) > 0.5;
+
+  // Check if move is needed to avoid redundant operations
+  if (next) {
+    // Should be after target
+    if (dragSrcEl.previousElementSibling === target) return false;
+  } else {
+    // Should be before target
+    if (dragSrcEl.nextElementSibling === target) return false;
+  }
+
+  // --- FLIP Animation Start ---
+  const siblings = [...container.children];
+  const positions = new Map();
+  siblings.forEach((el) => positions.set(el, el.getBoundingClientRect()));
+
+  // Perform DOM Move
+  if (next) {
+    container.insertBefore(dragSrcEl, target.nextSibling);
+  } else {
+    container.insertBefore(dragSrcEl, target);
+  }
+
+  // --- FLIP Animation Play ---
+  // Get new positions
+  const newSiblings = [...container.children];
+  newSiblings.forEach((el) => {
+    // We don't animate the dragged element itself as it's following the mouse (ghost)
+    // or staying semi-transparent in its new slot
+    if (el === dragSrcEl) return;
+
+    const oldRect = positions.get(el);
+    const newRect = el.getBoundingClientRect();
+
+    if (oldRect) {
+      const dx = oldRect.left - newRect.left;
+      const dy = oldRect.top - newRect.top;
+
+      if (dx !== 0 || dy !== 0) {
+        // Invert
+        el.classList.add("no-transition");
+        el.style.transform = `translate(${dx}px, ${dy}px)`;
+
+        // Force reflow
+        el.offsetHeight;
+
+        // Play
+        requestAnimationFrame(() => {
+          el.classList.remove("no-transition");
+          el.style.transform = "";
+        });
+      }
+    }
+  });
+
+  return false;
+}
+
+function handleDragEnter(e) {
+  if (e.target !== dragSrcEl && e.target.classList.contains("sort-char")) {
+    e.target.classList.add("over");
+  }
+}
+
+function handleDragLeave(e) {
+  e.target.classList.remove("over");
+}
+
+function handleDrop(e) {
+  if (e.stopPropagation) {
+    e.stopPropagation();
+  }
+
+  // DOM reordering already happened in DragOver
+  // Just clear validation status as positions changed
+  if (dragSrcEl && dragSrcEl.parentNode) {
+    const chars = dragSrcEl.parentNode.querySelectorAll(".sort-char");
+    chars.forEach((char) => char.classList.remove("correct", "incorrect"));
+  }
+
+  playSound("select");
+  return false;
+}
+
+function handleDragEnd(e) {
+  this.classList.remove("dragging");
+  const items = document.querySelectorAll(".sort-char");
+  items.forEach((item) => {
+    item.classList.remove("over");
+    item.style.transform = ""; // Cleanup any stuck transforms
+  });
+}
+
+function handleSortClick(e) {
+  if (currentMode !== "sort") return;
+
+  const target = e.target;
+  if (!target.classList.contains("sort-char")) return;
+
+  playSound("select");
+
+  if (selectedSortChar === null) {
+    // Select first char
+    selectedSortChar = target;
+    target.classList.add("selected");
+  } else if (selectedSortChar === target) {
+    // Deselect if same
+    selectedSortChar.classList.remove("selected");
+    selectedSortChar = null;
+  } else {
+    // Swap
+    // Check if same line
+    if (selectedSortChar.parentNode === target.parentNode) {
+      const temp = selectedSortChar.textContent;
+      selectedSortChar.textContent = target.textContent;
+      target.textContent = temp;
+
+      selectedSortChar.classList.remove("selected");
+      selectedSortChar.classList.remove("correct", "incorrect");
+      target.classList.remove("correct", "incorrect");
+      selectedSortChar = null;
+    } else {
+      // Different line, just change selection
+      selectedSortChar.classList.remove("selected");
+      selectedSortChar = target;
+      target.classList.add("selected");
+    }
+  }
+}
+
 // Render the poem based on difficulty
 function renderPoem() {
   const titleEl = document.getElementById("poem-title");
@@ -1197,82 +1409,143 @@ function renderPoem() {
     const lineEl = document.createElement("div");
     lineEl.className = "poem-line";
 
-    const chars = line.split("");
-    const blankIndices = determineBlanks(chars.length, currentDifficulty);
+    if (currentMode === "sort") {
+      // Sort Mode Logic
+      const chars = line.split("");
+      let finalChars = [...chars];
 
-    chars.forEach((char, charIndex) => {
-      if (blankIndices.includes(charIndex) && isChineseChar(char)) {
-        // Create input for blank
-        const input = document.createElement("input");
-        input.type = "text";
-        input.className = "char-input";
-        // input.maxLength = 1; // Removed to allow IME composition
-        input.dataset.line = lineIndex;
-        input.dataset.char = charIndex;
+      // Determine shuffle ratio based on difficulty
+      let shuffleRatio = 1.0;
+      if (currentDifficulty === "easy") shuffleRatio = 0.3;
+      else if (currentDifficulty === "medium") shuffleRatio = 0.6;
 
-        // Add event listener for auto-focus next
-        input.addEventListener("compositionstart", () => {
-          input.dataset.isComposing = "true";
+      const countToShuffle = Math.max(
+        2,
+        Math.ceil(chars.length * shuffleRatio),
+      );
+
+      if (shuffleRatio === 1.0 || countToShuffle >= chars.length) {
+        finalChars = shuffleArray([...chars]);
+      } else {
+        // Partial shuffle logic
+        const allIndices = Array.from({ length: chars.length }, (_, i) => i);
+        // Shuffle indices to pick random ones
+        for (let i = allIndices.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [allIndices[i], allIndices[j]] = [allIndices[j], allIndices[i]];
+        }
+        const indicesToShuffle = allIndices.slice(0, countToShuffle);
+
+        // Extract values
+        const valuesToShuffle = indicesToShuffle.map((i) => chars[i]);
+
+        // Shuffle values
+        const shuffledValues = shuffleArray(valuesToShuffle);
+
+        // Put back
+        indicesToShuffle.forEach((index, i) => {
+          finalChars[index] = shuffledValues[i];
         });
-        input.addEventListener("compositionend", () => {
-          input.dataset.isComposing = "false";
-          // If multiple chars entered (e.g. from IME), keep only the last one or valid one
-          // Usually user wants the last entered character if they are replacing,
-          // but here we are filling blanks.
-          // Let's just take the last character if length > 1
-          if (input.value.length > 1) {
-            // If user typed a full sentence, maybe we should handle that?
-            // But for now let's just keep the last char to be safe and simple
-            input.value = input.value.slice(-1);
-          }
+      }
 
-          if (input.value.length >= 1) {
-            focusNextInput(input);
-          }
-        });
-        input.addEventListener("input", (e) => {
-          handleInput(e, input);
-          // Only update tracing char if this input is still focused
-          if (document.activeElement === input) {
+      finalChars.forEach((char) => {
+        const charEl = document.createElement("div");
+        charEl.className = "sort-char";
+        charEl.textContent = char;
+        charEl.draggable = true;
+
+        // Add DnD listeners
+        charEl.addEventListener("dragstart", handleDragStart);
+        charEl.addEventListener("dragenter", handleDragEnter);
+        charEl.addEventListener("dragover", handleDragOver);
+        charEl.addEventListener("dragleave", handleDragLeave);
+        charEl.addEventListener("drop", handleDrop);
+        charEl.addEventListener("dragend", handleDragEnd);
+
+        // Add touch support (basic tap to swap logic could be added here too)
+        charEl.addEventListener("click", handleSortClick);
+
+        lineEl.appendChild(charEl);
+      });
+    } else {
+      // Standard Modes Logic
+      const chars = line.split("");
+      const blankIndices = determineBlanks(chars.length, currentDifficulty);
+
+      chars.forEach((char, charIndex) => {
+        if (blankIndices.includes(charIndex) && isChineseChar(char)) {
+          // Create input for blank
+          const input = document.createElement("input");
+          input.type = "text";
+          input.className = "char-input";
+          // input.maxLength = 1; // Removed to allow IME composition
+          input.dataset.line = lineIndex;
+          input.dataset.char = charIndex;
+
+          // Add event listener for auto-focus next
+          input.addEventListener("compositionstart", () => {
+            input.dataset.isComposing = "true";
+          });
+          input.addEventListener("compositionend", () => {
+            input.dataset.isComposing = "false";
+            // If multiple chars entered (e.g. from IME), keep only the last one or valid one
+            // Usually user wants the last entered character if they are replacing,
+            // but here we are filling blanks.
+            // Let's just take the last character if length > 1
+            if (input.value.length > 1) {
+              // If user typed a full sentence, maybe we should handle that?
+              // But for now let's just keep the last char to be safe and simple
+              input.value = input.value.slice(-1);
+            }
+
+            if (input.value.length >= 1) {
+              focusNextInput(input);
+            }
+          });
+          input.addEventListener("input", (e) => {
+            handleInput(e, input);
+            // Only update tracing char if this input is still focused
+            if (document.activeElement === input) {
+              setTracingChar(input.value);
+              updateStrokeBtnVisibility();
+            }
+          });
+          input.addEventListener("keydown", (e) => handleKeydown(e, input));
+
+          // Track focus
+          input.addEventListener("focus", (e) => {
+            // Remove active class from others
+            document
+              .querySelectorAll(".char-input")
+              .forEach((el) => el.classList.remove("active-focus"));
+            input.classList.add("active-focus");
+            lastFocusedInput = input;
             setTracingChar(input.value);
             updateStrokeBtnVisibility();
-          }
-        });
-        input.addEventListener("keydown", (e) => handleKeydown(e, input));
 
-        // Track focus
-        input.addEventListener("focus", (e) => {
-          // Remove active class from others
-          document
-            .querySelectorAll(".char-input")
-            .forEach((el) => el.classList.remove("active-focus"));
-          input.classList.add("active-focus");
-          lastFocusedInput = input;
-          setTracingChar(input.value);
-          updateStrokeBtnVisibility();
+            // If in handwriting mode, show the board
+            if (currentMode === "handwriting") {
+              showHandwritingBoard();
+            }
+          });
 
-          // If in handwriting mode, show the board
-          if (currentMode === "handwriting") {
-            showHandwritingBoard();
-          }
-        });
+          lineEl.appendChild(input);
 
-        lineEl.appendChild(input);
-
-        blanks.push({
-          lineIndex,
-          charIndex,
-          correctChar: char,
-          element: input,
-        });
-      } else {
-        // Show character
-        const span = document.createElement("div");
-        span.className = "char-box";
-        span.textContent = char;
-        lineEl.appendChild(span);
-      }
-    });
+          blanks.push({
+            lineIndex,
+            charIndex,
+            correctChar: char,
+            element: input,
+          });
+        } else {
+          // Show character
+          const span = document.createElement("div");
+          span.className = "char-box";
+          span.textContent = char;
+          lineEl.appendChild(span);
+        }
+      });
+    }
 
     contentEl.appendChild(lineEl);
   });
@@ -1408,8 +1681,57 @@ function focusPrevInput(currentInput) {
   }
 }
 
+function checkSortAnswers() {
+  let allCorrect = true;
+  const lines = document.querySelectorAll(".poem-line");
+
+  lines.forEach((line, lineIndex) => {
+    const chars = line.querySelectorAll(".sort-char");
+    const correctLine = currentPoem.content[lineIndex];
+
+    chars.forEach((charEl, charIndex) => {
+      const val = charEl.textContent.trim();
+      const correctVal = correctLine[charIndex];
+
+      if (val === correctVal) {
+        charEl.classList.add("correct");
+        charEl.classList.remove("incorrect");
+      } else {
+        charEl.classList.add("incorrect");
+        charEl.classList.remove("correct");
+        allCorrect = false;
+      }
+    });
+  });
+
+  const msgArea = document.getElementById("message-area");
+  const checkBtn = document.getElementById("check-btn");
+
+  if (allCorrect) {
+    if (checkBtn) checkBtn.disabled = true;
+    msgArea.textContent = "恭喜你！全部答对了！";
+    msgArea.style.color = "var(--success-color)";
+    playSound("success");
+    if (typeof confetti === "function") {
+      confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+    }
+    setTimeout(() => {
+      msgArea.textContent = "即将开始下一首...";
+      setTimeout(() => startNewGame(), 1000);
+    }, 3000);
+  } else {
+    playSound("error");
+    msgArea.textContent = "位置不对哦，请调整顺序！";
+    msgArea.style.color = "var(--error-color)";
+  }
+}
+
 // Check answers
 function checkAnswers() {
+  if (currentMode === "sort") {
+    checkSortAnswers();
+    return;
+  }
   let allCorrect = true;
   let filledCount = 0;
 
@@ -1478,6 +1800,12 @@ function checkAnswers() {
 function showCharHint() {
   const msgArea = document.getElementById("message-area");
 
+  if (currentMode === "sort") {
+    msgArea.textContent = "排序模式请使用整句提示功能";
+    msgArea.style.color = "var(--primary-color)";
+    return;
+  }
+
   if (!lastFocusedInput) {
     msgArea.textContent = "请先点击选中一个需要提示的填空格子";
     msgArea.style.color = "var(--primary-color)";
@@ -1508,6 +1836,49 @@ function showCharHint() {
 
 // Show hint (one sentence)
 function showHint() {
+  if (currentMode === "sort") {
+    // Find first incorrect line
+    const lines = document.querySelectorAll(".poem-line");
+    let targetLineIndex = -1;
+
+    for (let i = 0; i < lines.length; i++) {
+      const chars = lines[i].querySelectorAll(".sort-char");
+      const correctLine = currentPoem.content[i];
+      let lineCorrect = true;
+      for (let j = 0; j < chars.length; j++) {
+        if (chars[j].textContent !== correctLine[j]) {
+          lineCorrect = false;
+          break;
+        }
+      }
+      if (!lineCorrect) {
+        targetLineIndex = i;
+        break;
+      }
+    }
+
+    if (targetLineIndex !== -1) {
+      const line = lines[targetLineIndex];
+      const correctLine = currentPoem.content[targetLineIndex];
+      const chars = line.querySelectorAll(".sort-char");
+
+      chars.forEach((charEl, index) => {
+        charEl.textContent = correctLine[index];
+        charEl.classList.add("correct");
+        charEl.classList.remove("incorrect");
+      });
+
+      const msgArea = document.getElementById("message-area");
+      msgArea.textContent = `已还原第 ${parseInt(targetLineIndex) + 1} 句`;
+      msgArea.style.color = "var(--primary-color)";
+      playSound("success");
+    } else {
+      document.getElementById("message-area").textContent =
+        "你已经全部排好了！";
+    }
+    return;
+  }
+
   // Find the first line that has unfilled or incorrect blanks
   // User requested "one sentence hint".
   // We will group blanks by line.
@@ -1639,6 +2010,47 @@ const encouragingMessages = [
   "相信自己，下次一定全对！",
   "多读几遍诗句，语感会告诉你答案！",
 ];
+
+function showConfirmModal(message, onConfirm) {
+  const modal = document.getElementById("confirm-modal");
+  const messageEl = document.getElementById("confirm-message");
+  const okBtn = document.getElementById("confirm-ok-btn");
+  const cancelBtn = document.getElementById("confirm-cancel-btn");
+  const closeBtn = document.getElementById("close-confirm-modal");
+
+  messageEl.textContent = message;
+  modal.classList.remove("hidden");
+
+  // Clone buttons to remove previous event listeners
+  const newOkBtn = okBtn.cloneNode(true);
+  okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+
+  const newCancelBtn = cancelBtn.cloneNode(true);
+  cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+  const newCloseBtn = closeBtn.cloneNode(true);
+  closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+
+  newOkBtn.addEventListener("click", () => {
+    modal.classList.add("hidden");
+    if (onConfirm) onConfirm();
+  });
+
+  newCancelBtn.addEventListener("click", () => {
+    modal.classList.add("hidden");
+  });
+
+  newCloseBtn.addEventListener("click", () => {
+    modal.classList.add("hidden");
+  });
+
+  // Close on background click
+  modal.onclick = (e) => {
+    if (e.target === modal) {
+      modal.classList.add("hidden");
+    }
+  };
+}
 
 // Start
 loadPoems();

@@ -526,3 +526,87 @@ body.pool-right .container {
     color: #666;
     font-size: 0.9em;
 }
+
+/* Sorting Mode Styles */
+.sort-char {
+    width: 2em;
+    height: 2em;
+    line-height: 2em;
+    text-align: center;
+    border: 1px solid var(--primary-color);
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: grab;
+    margin: 0 2px;
+    user-select: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s;
+}
+
+.sort-char:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.sort-char:active {
+    cursor: grabbing;
+}
+
+.sort-char.dragging {
+    opacity: 0.5;
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    z-index: 100;
+}
+
+.sort-char.over {
+    border: 2px dashed var(--accent-color);
+    background-color: rgba(222, 184, 135, 0.3);
+}
+
+.sort-char.selected {
+    background-color: var(--secondary-color);
+    color: #fff;
+    transform: scale(1.1);
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    z-index: 10;
+}
+
+.sort-char.correct {
+    background-color: var(--correct-color);
+    color: #fff;
+    border-color: var(--correct-color);
+}
+
+.sort-char.incorrect {
+    background-color: var(--incorrect-color);
+    color: #fff;
+    border-color: var(--incorrect-color);
+}
+
+.sort-char.no-transition {
+    transition: none !important;
+}
+
+/* Confirm Modal Styles */
+.modal-content.small-modal {
+    height: auto;
+    max-width: 400px;
+    min-height: auto;
+}
+
+.modal-body {
+    padding: 25px 20px;
+    font-size: 1.1em;
+    color: var(--text-color);
+    text-align: center;
+    line-height: 1.5;
+}
+
+.modal-footer {
+    padding: 15px 20px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    background-color: rgba(222, 184, 135, 0.2);
+    border-top: 1px solid rgba(0,0,0,0.05);
+}

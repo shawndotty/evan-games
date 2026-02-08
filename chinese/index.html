@@ -23,7 +23,9 @@
             <option value="select_confused">
               混淆选择模式
             </option>
+            
             <option value="handwriting">手写模式</option>
+            <option value="sort">排序模式</option>
           </select>
           <select id="pool-position-select" style="display: none">
             <option value="bottom" selected>面板：底部</option>
@@ -51,6 +53,22 @@
           </div>
           <div id="poem-list" class="poem-list">
             <!-- List items will be generated here -->
+          </div>
+        </div>
+      </div>
+
+      <div id="confirm-modal" class="modal hidden">
+        <div class="modal-content small-modal">
+          <div class="modal-header">
+            <h2 id="confirm-title">提示</h2>
+            <span class="close-modal" id="close-confirm-modal">&times;</span>
+          </div>
+          <div class="modal-body">
+            <p id="confirm-message">切换模式将重置当前进度的输入记录，是否继续？</p>
+          </div>
+          <div class="modal-footer">
+            <button id="confirm-cancel-btn" class="secondary-btn">取消</button>
+            <button id="confirm-ok-btn" class="primary-btn">确定</button>
           </div>
         </div>
       </div>
