@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentWordObj = null;
   let currentWord = "";
   let mistakes = 0;
-  const maxMistakes = 6; // Head, Body, L-Arm, R-Arm, L-Leg, R-Leg
+  const maxMistakes = 10; // Base, Pole, Top, Rope, Head, Body, L-Arm, R-Arm, L-Leg, R-Leg
   let guessedLetters = new Set();
   let gameActive = false;
   let filteredWords = [];
@@ -219,46 +219,52 @@ document.addEventListener("DOMContentLoaded", () => {
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
-    // Draw Gallows (Always visible or base visible)
-    // Scaled by 2x for 600x600 canvas
+    // Incremental Drawing Steps
+    if (step >= 1) drawBase();
+    if (step >= 2) drawPole();
+    if (step >= 3) drawTop();
+    if (step >= 4) drawRope();
+    if (step >= 5) drawHead();
+    if (step >= 6) drawBody();
+    if (step >= 7) drawLeftArm();
+    if (step >= 8) drawRightArm();
+    if (step >= 9) drawLeftLeg();
+    if (step >= 10) drawRightLeg();
+  }
 
-    // Base
+  function drawBase() {
     ctx.beginPath();
     ctx.moveTo(100, 540);
     ctx.lineTo(500, 540);
     ctx.stroke();
+  }
 
-    // Pole
+  function drawPole() {
     ctx.beginPath();
     ctx.moveTo(200, 540);
     ctx.lineTo(200, 60);
     ctx.stroke();
+  }
 
-    // Top
+  function drawTop() {
+    // Top bar
     ctx.beginPath();
     ctx.moveTo(200, 60);
     ctx.lineTo(400, 60);
     ctx.stroke();
 
-    // Rope
-    ctx.beginPath();
-    ctx.moveTo(400, 60);
-    ctx.lineTo(400, 120);
-    ctx.stroke();
-
-    // Support
+    // Support (Diagonal)
     ctx.beginPath();
     ctx.moveTo(200, 120);
     ctx.lineTo(260, 60);
     ctx.stroke();
+  }
 
-    // Parts based on mistakes
-    if (step >= 1) drawHead();
-    if (step >= 2) drawBody();
-    if (step >= 3) drawLeftArm();
-    if (step >= 4) drawRightArm();
-    if (step >= 5) drawLeftLeg();
-    if (step >= 6) drawRightLeg();
+  function drawRope() {
+    ctx.beginPath();
+    ctx.moveTo(400, 60);
+    ctx.lineTo(400, 120);
+    ctx.stroke();
   }
 
   function drawHead() {
