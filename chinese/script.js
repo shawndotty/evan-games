@@ -245,11 +245,7 @@ function drawTracingChar() {
   hwContext.textAlign = "center";
   hwContext.textBaseline = "middle";
   // Slightly adjust y to center visually (move up a bit)
-  hwContext.fillText(
-    currentTracingChar,
-    canvas.width / 2,
-    canvas.height / 2 - 20,
-  );
+  hwContext.fillText(currentTracingChar, canvas.width / 2, canvas.height / 2);
   hwContext.restore();
 }
 
@@ -627,6 +623,13 @@ function generateSelectionPool() {
     pool.appendChild(btn);
   });
 
+  // Mark existing values as used (in case switching modes with filled inputs)
+  blanks.forEach((blank) => {
+    if (blank.element.value) {
+      togglePoolChar(blank.element.value, true);
+    }
+  });
+
   // Wait for DOM update then adjust layout
   requestAnimationFrame(() => {
     adjustLayout();
@@ -665,6 +668,32 @@ function adjustLayout() {
   } else if (body.classList.contains("pool-right")) {
     const width = pool.offsetWidth;
     container.style.marginRight = `${width}px`;
+  }
+}
+
+function togglePoolChar(char, isUsed) {
+  const pool = document.getElementById("selection-pool");
+  if (!pool) return;
+
+  const buttons = Array.from(pool.getElementsByClassName("pool-char"));
+
+  if (isUsed) {
+    // Find an available button with this char and mark it used
+    const btn = buttons.find(
+      (b) => b.textContent === char && !b.classList.contains("used"),
+    );
+    if (btn) {
+      btn.classList.add("used");
+    }
+  } else {
+    // Find a used button with this char and mark it available
+    // We prioritize marking one available that is 'used'
+    const btn = buttons.find(
+      (b) => b.textContent === char && b.classList.contains("used"),
+    );
+    if (btn) {
+      btn.classList.remove("used");
+    }
   }
 }
 
@@ -741,6 +770,17 @@ function getRandomCharFromPoems() {
 
 // Handle selection from pool
 function handlePoolSelection(char) {
+  // Check if this char is available in pool (though UI should prevent click, logic check is safe)
+  // But since we pass 'char' string, we rely on togglePoolChar to find *an* instance.
+  // We should strictly check if there is an unused instance available?
+  // Since the click event comes from a button, maybe we should check the button state?
+  // But here we just get the char string.
+  // Let's assume the button click handler prevents calling this if used, OR we check here.
+
+  // Actually, we should handle the 'used' check in the button click handler in generateSelectionPool?
+  // Or just rely on CSS pointer-events: none.
+  // CSS pointer-events: none is sufficient for blocking clicks.
+
   playSound("select");
 
   // If no input is focused, try to find the first empty one
@@ -757,7 +797,14 @@ function handlePoolSelection(char) {
   }
 
   if (lastFocusedInput) {
+    // If input already has a value, return it to pool
+    if (lastFocusedInput.value) {
+      togglePoolChar(lastFocusedInput.value, false);
+    }
+
     lastFocusedInput.value = char;
+    togglePoolChar(char, true); // Mark new char as used
+
     lastFocusedInput.classList.remove("incorrect");
     lastFocusedInput.classList.remove("correct");
 
@@ -919,6 +966,13 @@ function restartCurrentGame() {
     b.element.value = "";
     b.element.classList.remove("correct", "incorrect");
   });
+
+  // Reset pool chars
+  const pool = document.getElementById("selection-pool");
+  if (pool) {
+    const buttons = pool.querySelectorAll(".pool-char");
+    buttons.forEach((btn) => btn.classList.remove("used"));
+  }
 
   // Clear message area
   const msgArea = document.getElementById("message-area");
@@ -1209,6 +1263,10 @@ function handleKeydown(e, input) {
     playSound("select");
     if (isReadOnlyMode) {
       e.preventDefault();
+      // Free the char back to pool
+      if (input.value) {
+        togglePoolChar(input.value, false);
+      }
       input.value = "";
       input.classList.remove("correct", "incorrect");
       setTracingChar("");
@@ -1222,7 +1280,8 @@ function handleKeydown(e, input) {
     if (isReadOnlyMode) {
       e.preventDefault(); // Prevent browser back navigation
       if (input.value !== "") {
-        // If current input has content, clear it
+        // If current input has content, clear it and free char
+        togglePoolChar(input.value, false);
         input.value = "";
         input.classList.remove("correct", "incorrect");
         setTracingChar("");
@@ -1234,6 +1293,10 @@ function handleKeydown(e, input) {
         if (index > 0) {
           const prevInput = inputs[index - 1];
           prevInput.focus();
+          // Free char from prev input
+          if (prevInput.value) {
+            togglePoolChar(prevInput.value, false);
+          }
           prevInput.value = "";
           prevInput.classList.remove("correct", "incorrect");
           setTracingChar("");
