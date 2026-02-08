@@ -218,7 +218,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (btn) btn.classList.add("wrong");
       sounds.wrong();
       mistakes++;
-      drawHangman(mistakes);
+      animateToStep(mistakes); // Animate the new part
       checkLoss();
     }
 
@@ -303,117 +303,160 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Canvas Drawing ---
   function drawHangman(step) {
+    // Static redraw (e.g. resize or init)
+    drawStaticParts(step);
+    // If game over, draw eyes
+    if (step >= maxMistakes) {
+      drawEyes();
+    }
+  }
+
+  // New function for animated drawing
+  function animateToStep(targetStep) {
+    const duration = 500; // ms
+    const startTime = performance.now();
+
+    // Start pencil sound
+    sounds.startPencil();
+
+    function loop(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1.0);
+
+      // Clear and redraw everything up to previous step
+      drawStaticParts(targetStep - 1);
+
+      // Draw current step with progress
+      drawPart(targetStep, progress);
+
+      if (progress < 1.0) {
+        requestAnimationFrame(loop);
+      } else {
+        // Animation done
+        sounds.stopPencil();
+        // Ensure final state is clean
+        drawStaticParts(targetStep);
+
+        // If this was the last step, draw eyes
+        if (targetStep >= maxMistakes) {
+          drawEyes();
+        }
+      }
+    }
+
+    requestAnimationFrame(loop);
+  }
+
+  function drawStaticParts(maxStep) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.lineWidth = 8; // Scaled up line width
+    ctx.lineWidth = 8;
     ctx.strokeStyle = "#2C3E50";
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
-    // Incremental Drawing Steps
-    if (step >= 1) drawBase();
-    if (step >= 2) drawPole();
-    if (step >= 3) drawTop();
-    if (step >= 4) drawRope();
-    if (step >= 5) drawHead();
-    if (step >= 6) drawBody();
-    if (step >= 7) drawLeftArm();
-    if (step >= 8) drawRightArm();
-    if (step >= 9) drawLeftLeg();
-    if (step >= 10) drawRightLeg();
-  }
-
-  function drawBase() {
-    ctx.beginPath();
-    ctx.moveTo(100, 540);
-    ctx.lineTo(500, 540);
-    ctx.stroke();
-  }
-
-  function drawPole() {
-    ctx.beginPath();
-    ctx.moveTo(200, 540);
-    ctx.lineTo(200, 60);
-    ctx.stroke();
-  }
-
-  function drawTop() {
-    // Top bar
-    ctx.beginPath();
-    ctx.moveTo(200, 60);
-    ctx.lineTo(400, 60);
-    ctx.stroke();
-
-    // Support (Diagonal)
-    ctx.beginPath();
-    ctx.moveTo(200, 120);
-    ctx.lineTo(260, 60);
-    ctx.stroke();
-  }
-
-  function drawRope() {
-    ctx.beginPath();
-    ctx.moveTo(400, 60);
-    ctx.lineTo(400, 120);
-    ctx.stroke();
-  }
-
-  function drawHead() {
-    ctx.beginPath();
-    ctx.arc(400, 160, 40, 0, Math.PI * 2); // Center 400, 160, Radius 40
-    ctx.stroke();
-
-    // Happy/Sad face depending on game state?
-    // Let's just draw a neutral face for now, or X eyes if dead?
-    if (mistakes >= maxMistakes) {
-      // X Eyes
-      ctx.beginPath();
-      // Left Eye X
-      ctx.moveTo(384, 150);
-      ctx.lineTo(396, 162);
-      ctx.moveTo(396, 150);
-      ctx.lineTo(384, 162);
-      // Right Eye X
-      ctx.moveTo(404, 150);
-      ctx.lineTo(416, 162);
-      ctx.moveTo(416, 150);
-      ctx.lineTo(404, 162);
-      ctx.stroke();
+    for (let i = 1; i <= maxStep; i++) {
+      drawPart(i, 1.0);
     }
   }
 
-  function drawBody() {
+  // Generic draw part function
+  function drawPart(step, progress) {
     ctx.beginPath();
-    ctx.moveTo(400, 200);
-    ctx.lineTo(400, 360);
+
+    if (step === 1) {
+      // Base
+      // (100, 540) -> (500, 540)
+      drawLine(100, 540, 500, 540, progress);
+    } else if (step === 2) {
+      // Pole
+      // (200, 540) -> (200, 60)
+      drawLine(200, 540, 200, 60, progress);
+    } else if (step === 3) {
+      // Top
+      // Two parts: Top Bar + Support
+      // Split progress: 0-0.7 for Top Bar, 0.7-1.0 for Support
+
+      // Top Bar: (200, 60) -> (400, 60)
+      const p1 = Math.min(progress / 0.7, 1.0);
+      drawLine(200, 60, 400, 60, p1);
+
+      // Support: (200, 120) -> (260, 60)
+      if (progress > 0.7) {
+        const p2 = (progress - 0.7) / 0.3;
+        drawLine(200, 120, 260, 60, p2);
+      }
+    } else if (step === 4) {
+      // Rope
+      // (400, 60) -> (400, 120)
+      drawLine(400, 60, 400, 120, progress);
+    } else if (step === 5) {
+      // Head
+      // Arc: Center (400, 160), Radius 40
+      ctx.beginPath();
+      // Draw full circle incrementally
+      const endAngle = progress * Math.PI * 2;
+      ctx.arc(400, 160, 40, 0, endAngle);
+      ctx.stroke();
+
+      // X Eyes only if game over (mistakes >= maxMistakes)
+      // But this function is generic drawPart.
+      // Let's handle eyes separately or just at the end of game.
+      // Current logic draws eyes inside drawHead if mistakes >= max.
+      // We should probably only draw eyes when the game is actually lost.
+      // For animation, we skip eyes.
+    } else if (step === 6) {
+      // Body
+      // (400, 200) -> (400, 360)
+      drawLine(400, 200, 400, 360, progress);
+    } else if (step === 7) {
+      // Left Arm
+      // (400, 240) -> (340, 300)
+      drawLine(400, 240, 340, 300, progress);
+    } else if (step === 8) {
+      // Right Arm
+      // (400, 240) -> (460, 300)
+      drawLine(400, 240, 460, 300, progress);
+    } else if (step === 9) {
+      // Left Leg
+      // (400, 360) -> (340, 460)
+      drawLine(400, 360, 340, 460, progress);
+    } else if (step === 10) {
+      // Right Leg
+      // (400, 360) -> (460, 460)
+      drawLine(400, 360, 460, 460, progress);
+
+      // If finished and lost, maybe draw eyes?
+      // But drawPart is called during animation loop.
+      // Let's handle eyes in drawStaticParts or specialized logic.
+    }
+  }
+
+  function drawLine(x1, y1, x2, y2, progress) {
+    if (progress <= 0) return;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    const currentX = x1 + (x2 - x1) * progress;
+    const currentY = y1 + (y2 - y1) * progress;
+    ctx.lineTo(currentX, currentY);
     ctx.stroke();
   }
 
-  function drawLeftArm() {
+  // Draw Eyes (Static helper)
+  function drawEyes() {
+    ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.moveTo(400, 240);
-    ctx.lineTo(340, 300);
+    // Left Eye X
+    ctx.moveTo(384, 150);
+    ctx.lineTo(396, 162);
+    ctx.moveTo(396, 150);
+    ctx.lineTo(384, 162);
+    // Right Eye X
+    ctx.moveTo(404, 150);
+    ctx.lineTo(416, 162);
+    ctx.moveTo(416, 150);
+    ctx.lineTo(404, 162);
     ctx.stroke();
-  }
-
-  function drawRightArm() {
-    ctx.beginPath();
-    ctx.moveTo(400, 240);
-    ctx.lineTo(460, 300);
-    ctx.stroke();
-  }
-
-  function drawLeftLeg() {
-    ctx.beginPath();
-    ctx.moveTo(400, 360);
-    ctx.lineTo(340, 460);
-    ctx.stroke();
-  }
-
-  function drawRightLeg() {
-    ctx.beginPath();
-    ctx.moveTo(400, 360);
-    ctx.lineTo(460, 460);
-    ctx.stroke();
+    ctx.lineWidth = 8; // Restore
   }
 
   // Start
