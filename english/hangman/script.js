@@ -59,7 +59,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function addEventListeners() {
-    newGameBtn.addEventListener("click", startNewGame);
+    newGameBtn.addEventListener("click", () => {
+      sounds.click();
+      startNewGame();
+    });
     // We can also restart game when filters change, or wait for user to click New Game.
     // Usually better to wait for click to avoid disrupting current game unexpectedly.
     // But let's trigger new game if user changes filters to give immediate feedback?
@@ -166,11 +169,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (currentWord.includes(letter)) {
       // Correct guess
       if (btn) btn.classList.add("correct");
+      sounds.correct();
       renderWord();
       checkWin();
     } else {
       // Wrong guess
       if (btn) btn.classList.add("wrong");
+      sounds.wrong();
       mistakes++;
       drawHangman(mistakes);
       checkLoss();
@@ -186,6 +191,7 @@ document.addEventListener("DOMContentLoaded", () => {
       messageDisplay.textContent = "🎉 Great Job! You Won! 🎉";
       messageDisplay.className = "win-msg";
       playWinEffect();
+      sounds.win();
     }
   }
 
@@ -195,6 +201,7 @@ document.addEventListener("DOMContentLoaded", () => {
       messageDisplay.textContent = `Game Over! The word was: ${currentWord}`;
       messageDisplay.className = "lose-msg";
       renderWord(true); // Reveal answer
+      sounds.lose();
     }
   }
 
