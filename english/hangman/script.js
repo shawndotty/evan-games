@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let guessedLetters = new Set();
   let gameActive = false;
   let filteredWords = [];
+  let isUpperCase = true; // State for case toggle
 
   // DOM Elements
   const vowelsContainer = document.getElementById("vowels-container");
@@ -21,6 +22,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const gradeSelect = document.getElementById("grade-select");
   const difficultySelect = document.getElementById("difficulty-select");
   const newGameBtn = document.getElementById("new-game-btn");
+  const toggleCaseBtn = document.getElementById("toggle-case-btn");
+  const hintBtn = document.getElementById("hint-btn");
 
   // Constants
   const VOWELS = "AEIOU".split("");
@@ -52,8 +55,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function createLetterButton(letter) {
     const btn = document.createElement("button");
     btn.classList.add("letter-btn");
-    btn.textContent = letter;
-    btn.dataset.letter = letter;
+    // Display text based on case, but data-letter stays UPPERCASE for logic
+    btn.textContent = isUpperCase ? letter : letter.toLowerCase();
+    btn.dataset.letter = letter; // Always UPPERCASE
     btn.addEventListener("click", () => handleGuess(letter));
     return btn;
   }
@@ -63,10 +67,43 @@ document.addEventListener("DOMContentLoaded", () => {
       sounds.click();
       startNewGame();
     });
-    // We can also restart game when filters change, or wait for user to click New Game.
-    // Usually better to wait for click to avoid disrupting current game unexpectedly.
-    // But let's trigger new game if user changes filters to give immediate feedback?
-    // Let's stick to the button for "New Game".
+
+    toggleCaseBtn.addEventListener("click", () => {
+      isUpperCase = !isUpperCase;
+      sounds.click();
+      createKeyboard(); // Re-render keyboard
+      renderWord(); // Re-render word
+      // Also update any guessed status on the new keyboard
+      restoreKeyboardStatus();
+    });
+
+    hintBtn.addEventListener("click", () => {
+      useHint();
+    });
+  }
+
+  function restoreKeyboardStatus() {
+    // Re-apply disabled/correct/wrong states to the new keyboard buttons
+    guessedLetters.forEach((letter) => {
+      // letter is always stored as uppercase in logic
+      const displayLetter = isUpperCase ? letter : letter.toLowerCase();
+      // Note: our dataset.letter is what we use for selection.
+      // If we change display, we should probably keep dataset.letter consistent or handle the mapping.
+      // Let's decide: Logic always uses UPPERCASE.
+      // UI Buttons: textContent changes, dataset.letter always UPPERCASE to simplify logic.
+
+      const btn = document.querySelector(
+        `.letter-btn[data-letter="${letter}"]`,
+      );
+      if (btn) {
+        btn.disabled = true;
+        if (currentWord.includes(letter)) {
+          btn.classList.add("correct");
+        } else {
+          btn.classList.add("wrong");
+        }
+      }
+    });
   }
 
   function filterWords() {
@@ -124,6 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
     resetKeyboard();
     renderWord();
     drawHangman(0); // Draw initial state (Gallows)
+    updateHintButton(); // Check hint status for new word
   }
 
   function resetKeyboard() {
@@ -142,8 +180,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const slot = document.createElement("div");
       slot.classList.add("letter-slot");
 
+      // Logic uses UPPERCASE. Display uses current case setting.
+      const displayChar = isUpperCase ? letter : letter.toLowerCase();
+
       if (guessedLetters.has(letter) || revealAll) {
-        slot.textContent = letter;
+        slot.textContent = displayChar;
         slot.classList.add("revealed");
 
         if (revealAll && !guessedLetters.has(letter)) {
@@ -180,6 +221,52 @@ document.addEventListener("DOMContentLoaded", () => {
       drawHangman(mistakes);
       checkLoss();
     }
+
+    // Update hint button status
+    updateHintButton();
+  }
+
+  function useHint() {
+    if (!gameActive) return;
+
+    // Find all unguested correct letters
+    const letters = currentWord.split("");
+    const unrevealedCorrect = [
+      ...new Set(letters.filter((l) => !guessedLetters.has(l))),
+    ];
+
+    // Security check: if only 1 left, should be disabled, but if called anyway, return.
+    if (unrevealedCorrect.length <= 1) {
+      // This case should ideally be prevented by UI disabling, but good to have safeguard
+      return;
+    }
+
+    // Pick random
+    const randomIndex = Math.floor(Math.random() * unrevealedCorrect.length);
+    const hintLetter = unrevealedCorrect[randomIndex];
+
+    // Simulate guess
+    sounds.click(); // Or a special hint sound
+    handleGuess(hintLetter);
+  }
+
+  function updateHintButton() {
+    if (!gameActive) {
+      hintBtn.disabled = true;
+      return;
+    }
+
+    const letters = currentWord.split("");
+    const unrevealedCorrect = [
+      ...new Set(letters.filter((l) => !guessedLetters.has(l))),
+    ];
+
+    // Disable if 1 or 0 letters left
+    if (unrevealedCorrect.length <= 1) {
+      hintBtn.disabled = true;
+    } else {
+      hintBtn.disabled = false;
+    }
   }
 
   function checkWin() {
@@ -192,16 +279,19 @@ document.addEventListener("DOMContentLoaded", () => {
       messageDisplay.className = "win-msg";
       playWinEffect();
       sounds.win();
+      updateHintButton(); // Disable hint
     }
   }
 
   function checkLoss() {
     if (mistakes >= maxMistakes) {
       gameActive = false;
-      messageDisplay.textContent = `Game Over! The word was: ${currentWord}`;
+      const displayWord = isUpperCase ? currentWord : currentWord.toLowerCase();
+      messageDisplay.textContent = `Game Over! The word was: ${displayWord}`;
       messageDisplay.className = "lose-msg";
       renderWord(true); // Reveal answer
       sounds.lose();
+      updateHintButton(); // Disable hint
     }
   }
 

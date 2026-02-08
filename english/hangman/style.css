@@ -130,6 +130,7 @@ select:hover {
     flex: 0 0 300px;
 }
 
+/* Center Panel Updates */
 .center-panel {
     flex: 1;
     background-color: white;
@@ -137,10 +138,11 @@ select:hover {
     box-shadow: 0 6px 0 rgba(0,0,0,0.05);
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start; /* Changed from center to allow stacking */
     align-items: center;
     position: relative;
     border: 2px solid #fff;
+    padding: 2rem 1rem; /* Added padding */
 }
 
 h2 {
@@ -220,6 +222,7 @@ h2 {
     border-radius: 1rem;
     padding: 1rem;
     border: 2px dashed #ddd;
+    margin-bottom: 1rem;
 }
 
 canvas {
@@ -227,25 +230,73 @@ canvas {
     height: auto;
 }
 
-/* Bottom Word Display */
+/* Word Container moved to center */
+.word-container {
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+/* Bottom Control Panel */
 .bottom-panel {
     margin-top: 1rem;
-    padding: 1.5rem;
+    padding: 1rem 2rem;
     background-color: white;
     border-radius: 1rem;
     box-shadow: 0 6px 0 rgba(0,0,0,0.1);
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100px;
+    gap: 2rem;
+    min-height: auto; /* Remove fixed min-height */
     border: 2px solid #fff;
 }
 
-.word-container {
-    display: flex;
-    gap: 0.8rem;
-    flex-wrap: wrap;
-    justify-content: center;
+.action-btn {
+    padding: 0.8rem 1.5rem;
+    font-size: 1.1rem;
+    font-family: inherit;
+    font-weight: bold;
+    border: none;
+    border-radius: 2rem;
+    cursor: pointer;
+    background-color: #f1f2f6;
+    color: var(--text-color);
+    box-shadow: 0 4px 0 #dfe4ea;
+    transition: all 0.1s;
+}
+
+.action-btn:hover:not(:disabled) {
+    background-color: #e1e2e6;
+    transform: translateY(-2px);
+}
+
+.action-btn:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow: none;
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: translateY(4px);
+}
+
+.hint-btn {
+    background-color: var(--accent-color);
+    color: var(--text-color);
+    box-shadow: 0 4px 0 #e1c950;
+}
+
+.hint-btn:hover:not(:disabled) {
+    background-color: #fff0a0;
+}
+
+.hint-btn:active:not(:disabled) {
+    box-shadow: 0 1px 0 #e1c950;
 }
 
 .letter-slot {
@@ -279,13 +330,15 @@ canvas {
 
 /* Message */
 #game-message {
-    margin-top: 1rem;
+    margin: 1rem 0;
     font-size: 1.8rem;
     font-weight: bold;
     text-align: center;
     min-height: 2.5rem;
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .hidden {

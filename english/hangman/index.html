@@ -57,9 +57,12 @@
             <!-- Center: Hangman -->
             <section class="center-panel">
                 <div class="canvas-wrapper">
-                    <canvas id="hangman-canvas" width="600" height="600"></canvas>
+                    <canvas id="hangman-canvas" width="300" height="300"></canvas>
                 </div>
                 <div id="game-message" class="hidden"></div>
+                <div id="word-display" class="word-container">
+                    <!-- JS will populate -->
+                </div>
             </section>
 
             <!-- Right: Consonants -->
@@ -71,11 +74,10 @@
             </aside>
         </main>
 
-        <!-- Bottom: Word Display -->
+        <!-- Bottom: Controls -->
         <footer class="bottom-panel">
-            <div id="word-display" class="word-container">
-                <!-- JS will populate -->
-            </div>
+            <button id="toggle-case-btn" class="action-btn">Aa Toggle Case</button>
+            <button id="hint-btn" class="action-btn hint-btn">💡 Hint</button>
         </footer>
     </div>
 
