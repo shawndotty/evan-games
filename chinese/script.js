@@ -8,12 +8,10 @@ let handwritingCanvas = null; // Handwriting canvas instance
 let recentPoemIndices = []; // Track recently used poem indices
 const MAX_RECENT_HISTORY = 20; // Ensure no repeats within this many turns
 
-// Initialize cnchar resource base
-if (typeof cnchar !== "undefined") {
-  // Use https explicitly to avoid mixed content issues
-  // Ensure we point to the npm package structure
-  cnchar.setResourceBase("https://cdn.jsdelivr.net/npm/cnchar-data@latest/");
-}
+// Initialize cnchar resource base - Not needed for basic features anymore
+// if (typeof cnchar !== "undefined") {
+//   cnchar.setResourceBase("https://cdn.jsdelivr.net/npm/cnchar-data@latest/");
+// }
 
 // Load poems based on selection
 function loadPoems() {
@@ -181,7 +179,7 @@ function initGame() {
   if (hwPinyinBtn) {
     hwPinyinBtn.addEventListener("click", () => {
       if (lastFocusedInput && lastFocusedInput.value) {
-        showPinyinDefinition(lastFocusedInput.value);
+        showPinyin(lastFocusedInput.value);
       } else {
         const msgArea = document.getElementById("message-area");
         if (msgArea) {
@@ -1102,7 +1100,7 @@ function showStrokeOrder(char) {
   });
 }
 
-function showPinyinDefinition(char) {
+function showPinyin(char) {
   const display = document.getElementById("stroke-text-display");
   if (!display) return;
 
@@ -1116,14 +1114,14 @@ function showPinyinDefinition(char) {
     const container = document.createElement("div");
     container.className = "pinyin-def-container";
     container.style.padding = "10px";
-    container.style.textAlign = "left";
+    container.style.textAlign = "center";
     container.style.backgroundColor = "#fff";
     container.style.borderRadius = "5px";
     container.style.border = "1px solid #ddd";
 
     // Large Char
     const charDiv = document.createElement("div");
-    charDiv.style.fontSize = "3em";
+    charDiv.style.fontSize = "4em";
     charDiv.style.textAlign = "center";
     charDiv.style.marginBottom = "10px";
     charDiv.style.color = "var(--primary-color)";
@@ -1132,56 +1130,16 @@ function showPinyinDefinition(char) {
 
     // Pinyin
     const pinyinDiv = document.createElement("div");
-    pinyinDiv.style.fontSize = "1.2em";
+    pinyinDiv.style.fontSize = "2em";
     pinyinDiv.style.marginBottom = "8px";
     let pinyin = "";
     if (typeof cnchar !== "undefined" && cnchar.spell) {
       pinyin = cnchar.spell(char, "tone");
     }
-    pinyinDiv.innerHTML = `<strong>拼音：</strong>${pinyin || "未知"}`;
+    pinyinDiv.innerHTML = `${pinyin || "未知"}`;
     container.appendChild(pinyinDiv);
 
-    // Explanation
-    const explainDiv = document.createElement("div");
-    explainDiv.style.fontSize = "1em";
-    explainDiv.style.lineHeight = "1.5";
-    explainDiv.style.maxHeight = "300px";
-    explainDiv.style.overflowY = "auto";
-
-    let explanation = "";
-    let errorMsg = "";
-
-    if (typeof cnchar === "undefined") {
-      errorMsg = "cnchar 库未加载";
-    } else if (!cnchar.explain) {
-      errorMsg = "cnchar-explanation 插件未加载";
-    } else {
-      try {
-        explanation = cnchar.explain(char);
-      } catch (e) {
-        errorMsg = "查询出错: " + e.message;
-      }
-    }
-
-    // Format explanation if it's a string (replace newlines with br)
-    if (explanation) {
-      if (typeof explanation === "string") {
-        explanation = explanation.replace(/\n/g, "<br>");
-      } else {
-        explanation = JSON.stringify(explanation);
-      }
-    } else {
-      // If no explanation found but no error, it means the char is not in db
-      if (!errorMsg) errorMsg = "未找到该字释义";
-    }
-
-    if (explanation) {
-      explainDiv.innerHTML = `<strong>释义：</strong><br>${explanation}`;
-    } else {
-      explainDiv.innerHTML = `<span style="color:red;">${errorMsg}</span><br><small>提示：本地打开HTML可能导致部分数据无法加载，请尝试使用本地服务器(Live Server)运行。</small>`;
-    }
-
-    container.appendChild(explainDiv);
+    // Note: Explanation feature removed due to CDN issues on GitHub Pages
 
     display.appendChild(container);
   });
