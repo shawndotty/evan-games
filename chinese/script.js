@@ -985,7 +985,7 @@ function showStrokeOrder(char) {
             animContainer.textContent = "动画加载失败";
           },
         });
-        writer.animateLoop();
+        writer.loopCharacterAnimation();
       } catch (e) {
         console.error("HanziWriter init error:", e);
         animContainer.textContent = "动画初始化失败";
