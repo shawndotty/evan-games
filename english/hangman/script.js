@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let guessedLetters = new Set();
   let gameActive = false;
   let filteredWords = [];
-  let isUpperCase = true; // State for case toggle
+  let isUpperCase = false; // State for case toggle
 
   // DOM Elements
   const vowelsContainer = document.getElementById("vowels-container");
@@ -72,9 +72,21 @@ document.addEventListener("DOMContentLoaded", () => {
       isUpperCase = !isUpperCase;
       sounds.click();
       createKeyboard(); // Re-render keyboard
-      renderWord(); // Re-render word
+
+      // Determine if we should reveal all (only if lost)
+      const isLost = !gameActive && mistakes >= maxMistakes;
+      renderWord(isLost); // Re-render word
+
       // Also update any guessed status on the new keyboard
       restoreKeyboardStatus();
+
+      // Update Game Over message if visible
+      if (isLost) {
+        const displayWord = isUpperCase
+          ? currentWord
+          : currentWord.toLowerCase();
+        messageDisplay.textContent = `Game Over! The word was: ${displayWord}`;
+      }
     });
 
     hintBtn.addEventListener("click", () => {
