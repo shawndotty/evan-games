@@ -159,6 +159,13 @@ function initGame() {
     hwStrokeBtn.addEventListener("click", () => {
       if (lastFocusedInput && lastFocusedInput.value) {
         showStrokeOrder(lastFocusedInput.value);
+      } else {
+        // Feedback for user if button is visible but state is invalid (rare edge case)
+        const msgArea = document.getElementById("message-area");
+        if (msgArea) {
+          msgArea.textContent = "请先选中一个有字的格子";
+          msgArea.style.color = "var(--primary-color)";
+        }
       }
     });
   }
@@ -986,8 +993,10 @@ function updateStrokeBtnVisibility() {
     lastFocusedInput.value
   ) {
     btn.classList.remove("hidden");
+    btn.style.display = "inline-block"; // Ensure visibility even if CSS fails
   } else {
     btn.classList.add("hidden");
+    btn.style.display = "none"; // Ensure hidden
   }
 }
 
