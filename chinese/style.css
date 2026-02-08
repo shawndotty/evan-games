@@ -559,7 +559,7 @@ body.pool-right .container {
 }
 
 .sort-char.over {
-    border: 2px dashed var(--accent-color);
+    border: 2px dashed var(--primary-color);
     background-color: rgba(222, 184, 135, 0.3);
 }
 
@@ -572,15 +572,15 @@ body.pool-right .container {
 }
 
 .sort-char.correct {
-    background-color: var(--correct-color);
+    background-color: var(--success-color);
     color: #fff;
-    border-color: var(--correct-color);
+    border-color: var(--success-color);
 }
 
 .sort-char.incorrect {
-    background-color: var(--incorrect-color);
+    background-color: var(--error-color);
     color: #fff;
-    border-color: var(--incorrect-color);
+    border-color: var(--error-color);
 }
 
 .sort-char.no-transition {
