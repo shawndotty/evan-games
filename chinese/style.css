@@ -400,6 +400,10 @@ body.pool-right .container {
     display: none; /* Hide fully */
 }
 
+.hidden {
+    display: none !important;
+}
+
 .modal-content {
     background-color: var(--bg-color);
     width: 90%;

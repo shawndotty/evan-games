@@ -153,6 +153,41 @@ function initGame() {
     .getElementById("hw-undo-btn")
     .addEventListener("click", undoHandwriting);
 
+  // Stroke Order UI events
+  const hwStrokeBtn = document.getElementById("hw-stroke-btn");
+  if (hwStrokeBtn) {
+    hwStrokeBtn.addEventListener("click", () => {
+      if (lastFocusedInput && lastFocusedInput.value) {
+        showStrokeOrder(lastFocusedInput.value);
+      }
+    });
+  }
+
+  const closeStrokeModal = document.querySelector(".close-stroke-modal");
+  if (closeStrokeModal) {
+    closeStrokeModal.addEventListener("click", () => {
+      document.getElementById("stroke-order-modal").classList.add("hidden");
+    });
+  }
+
+  const replayStrokeBtn = document.getElementById("replay-stroke-btn");
+  if (replayStrokeBtn) {
+    replayStrokeBtn.addEventListener("click", () => {
+      if (strokeWriter) {
+        strokeWriter.animateLoop();
+      }
+    });
+  }
+
+  const strokeModal = document.getElementById("stroke-order-modal");
+  if (strokeModal) {
+    strokeModal.addEventListener("click", (e) => {
+      if (e.target.id === "stroke-order-modal") {
+        strokeModal.classList.add("hidden");
+      }
+    });
+  }
+
   // Grid style selector
   const gridSelect = document.getElementById("grid-style-select");
   if (gridSelect) {
@@ -184,6 +219,7 @@ let currentStrokeSys = []; // Current stroke for System API
 let lastPoint = null;
 let handwritingRecognizer = null; // System handwriting recognizer
 let currentTracingChar = ""; // Char to display as background for tracing
+let strokeWriter = null; // HanziWriter instance for stroke order animation
 
 function setTracingChar(char) {
   currentTracingChar = char;
@@ -406,6 +442,7 @@ async function recognizeHandwriting() {
         const event = new Event("input", { bubbles: true });
         lastFocusedInput.dispatchEvent(event);
         clearHandwriting();
+        updateStrokeBtnVisibility();
       }
     });
     candidatesDiv.appendChild(btn);
@@ -548,6 +585,8 @@ function updateModeUI() {
     if (positionSelect) positionSelect.style.display = "none";
     inputs.forEach((input) => input.removeAttribute("readonly"));
   }
+
+  updateStrokeBtnVisibility();
 }
 
 // Generate selection pool for select mode
@@ -880,6 +919,78 @@ function restartCurrentGame() {
   }
 }
 
+function showStrokeOrder(char) {
+  const modal = document.getElementById("stroke-order-modal");
+  if (!modal) return;
+  modal.classList.remove("hidden");
+
+  const container = document.getElementById("stroke-order-container");
+  if (!container) return;
+  container.innerHTML = ""; // Clear
+  container.textContent = "正在加载...";
+
+  if (typeof HanziWriter === "undefined") {
+    container.textContent = "笔顺库加载失败";
+    return;
+  }
+
+  // Ensure single character
+  const targetChar = char.charAt(0);
+  if (!isChineseChar(targetChar)) {
+    container.textContent = "非汉字无法显示笔顺";
+    return;
+  }
+
+  // Use requestAnimationFrame to ensure modal is visible and layout is computed
+  requestAnimationFrame(() => {
+    try {
+      container.innerHTML = ""; // Clear loading text
+
+      strokeWriter = HanziWriter.create("stroke-order-container", targetChar, {
+        width: 260,
+        height: 260,
+        padding: 5,
+        showOutline: true,
+        strokeAnimationSpeed: 1, // 1x speed
+        delayBetweenStrokes: 200, // ms
+        strokeColor: "#333",
+        radicalColor: "#168F16",
+        onLoadCharDataError: function (reason) {
+          console.error("HanziWriter load error:", reason);
+          container.textContent = "无法加载该字笔顺数据";
+        },
+        onLoadCharDataSuccess: function () {
+          strokeWriter.animateLoop();
+        },
+      });
+
+      // Fallback: If success callback isn't triggered for some reason (older versions),
+      // or to start animation if data is already cached.
+      // But v3.5 should use callback.
+      // Safe to call animateLoop immediately? It returns a promise in newer versions or handles loading.
+      // Let's rely on onLoadCharDataSuccess to be safe and avoid double animation.
+    } catch (e) {
+      console.error("HanziWriter error:", e);
+      container.textContent = "无法加载该字笔顺";
+    }
+  });
+}
+
+function updateStrokeBtnVisibility() {
+  const btn = document.getElementById("hw-stroke-btn");
+  if (!btn) return;
+
+  if (
+    currentMode === "handwriting" &&
+    lastFocusedInput &&
+    lastFocusedInput.value
+  ) {
+    btn.classList.remove("hidden");
+  } else {
+    btn.classList.add("hidden");
+  }
+}
+
 // Render the poem based on difficulty
 function renderPoem() {
   const titleEl = document.getElementById("poem-title");
@@ -933,6 +1044,7 @@ function renderPoem() {
           // Only update tracing char if this input is still focused
           if (document.activeElement === input) {
             setTracingChar(input.value);
+            updateStrokeBtnVisibility();
           }
         });
         input.addEventListener("keydown", (e) => handleKeydown(e, input));
@@ -946,6 +1058,7 @@ function renderPoem() {
           input.classList.add("active-focus");
           lastFocusedInput = input;
           setTracingChar(input.value);
+          updateStrokeBtnVisibility();
 
           // If in handwriting mode, show the board
           if (currentMode === "handwriting") {
@@ -1038,6 +1151,7 @@ function handleKeydown(e, input) {
       input.value = "";
       input.classList.remove("correct", "incorrect");
       setTracingChar("");
+      updateStrokeBtnVisibility();
     }
     return;
   }
@@ -1051,6 +1165,7 @@ function handleKeydown(e, input) {
         input.value = "";
         input.classList.remove("correct", "incorrect");
         setTracingChar("");
+        updateStrokeBtnVisibility();
       } else {
         // If current is empty, move to previous and clear it
         const inputs = Array.from(document.querySelectorAll(".char-input"));
@@ -1061,6 +1176,7 @@ function handleKeydown(e, input) {
           prevInput.value = "";
           prevInput.classList.remove("correct", "incorrect");
           setTracingChar("");
+          updateStrokeBtnVisibility();
         }
       }
     } else {
@@ -1169,6 +1285,7 @@ function showCharHint() {
       playSound("success");
 
       blank.element.focus();
+      updateStrokeBtnVisibility();
     }
   }
 }
