@@ -932,14 +932,15 @@ function showStrokeOrder(char) {
   modal.classList.remove("hidden");
 
   const container = document.getElementById("stroke-order-container");
+  const textContainer = document.getElementById("stroke-text-container");
   if (!container) return;
-  container.innerHTML = ""; // Clear
-  container.textContent = "正在加载...";
 
-  if (typeof HanziWriter === "undefined") {
-    container.textContent = "笔顺库加载失败";
-    return;
-  }
+  // Clear previous content
+  container.innerHTML = "";
+  if (textContainer) textContainer.innerHTML = "";
+
+  // Show loading state
+  container.textContent = "正在加载...";
 
   // Ensure single character
   const targetChar = char.charAt(0);
@@ -950,35 +951,56 @@ function showStrokeOrder(char) {
 
   // Use requestAnimationFrame to ensure modal is visible and layout is computed
   requestAnimationFrame(() => {
-    try {
-      container.innerHTML = ""; // Clear loading text
+    container.innerHTML = ""; // Clear loading text
 
-      strokeWriter = HanziWriter.create("stroke-order-container", targetChar, {
-        width: 260,
-        height: 260,
-        padding: 5,
-        showOutline: true,
-        strokeAnimationSpeed: 1, // 1x speed
-        delayBetweenStrokes: 200, // ms
-        strokeColor: "#333",
-        radicalColor: "#168F16",
-        onLoadCharDataError: function (reason) {
-          console.error("HanziWriter load error:", reason);
-          container.textContent = "无法加载该字笔顺数据";
-        },
-        onLoadCharDataSuccess: function () {
-          strokeWriter.animateLoop();
-        },
-      });
+    // 1. Try to get text description (Reliable Fallback)
+    if (textContainer && typeof cnchar !== "undefined" && cnchar.stroke) {
+      try {
+        // Get stroke names: ['横', '竖', ...]
+        const strokeNames = cnchar.stroke(targetChar, "order", "name");
+        if (Array.isArray(strokeNames) && strokeNames.length > 0) {
+          let textHtml =
+            '<span class="stroke-text-title">笔顺文字说明：</span>';
+          textHtml += strokeNames
+            .map((name, index) => {
+              return `<span class="stroke-step">${index + 1}.${name}</span>`;
+            })
+            .join("，");
+          textContainer.innerHTML = textHtml;
+        } else {
+          textContainer.textContent = "暂无笔顺文字数据";
+        }
+      } catch (e) {
+        console.error("cnchar text error:", e);
+        textContainer.textContent = "加载文字说明失败";
+      }
+    }
 
-      // Fallback: If success callback isn't triggered for some reason (older versions),
-      // or to start animation if data is already cached.
-      // But v3.5 should use callback.
-      // Safe to call animateLoop immediately? It returns a promise in newer versions or handles loading.
-      // Let's rely on onLoadCharDataSuccess to be safe and avoid double animation.
-    } catch (e) {
-      console.error("HanziWriter error:", e);
-      container.textContent = "无法加载该字笔顺";
+    // 2. Try to render animation (Visual)
+    if (typeof cnchar !== "undefined" && cnchar.draw) {
+      try {
+        cnchar.draw(targetChar, {
+          el: container,
+          type: cnchar.draw.TYPE.ANIMATION,
+          style: {
+            length: 4, // border width
+            lineColor: "#333",
+            radicalColor: "#168F16",
+            backgroundColor: "#fff",
+          },
+          animation: {
+            loopAnimate: true,
+            autoAnimate: true, // auto start
+          },
+        });
+      } catch (e) {
+        console.error("cnchar draw error:", e);
+        if (!textContainer || textContainer.innerHTML === "") {
+          container.textContent = "无法加载该字笔顺动画";
+        }
+      }
+    } else {
+      container.textContent = "笔顺库加载失败";
     }
   });
 }
