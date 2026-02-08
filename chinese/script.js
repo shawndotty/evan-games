@@ -8,6 +8,13 @@ let handwritingCanvas = null; // Handwriting canvas instance
 let recentPoemIndices = []; // Track recently used poem indices
 const MAX_RECENT_HISTORY = 20; // Ensure no repeats within this many turns
 
+// Initialize cnchar resource base
+if (typeof cnchar !== "undefined") {
+  // Use https explicitly to avoid mixed content issues
+  // Ensure we point to the npm package structure
+  cnchar.setResourceBase("https://cdn.jsdelivr.net/npm/cnchar-data@latest/");
+}
+
 // Load poems based on selection
 function loadPoems() {
   const librarySelect = document.getElementById("library-select");
