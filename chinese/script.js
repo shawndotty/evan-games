@@ -688,6 +688,8 @@ function getRandomCharFromPoems() {
 
 // Handle selection from pool
 function handlePoolSelection(char) {
+  playSound("select");
+
   // If no input is focused, try to find the first empty one
   if (!lastFocusedInput) {
     const emptyBlank = blanks.find((b) => !b.element.value);
@@ -1275,6 +1277,21 @@ function playSound(type) {
     gain.gain.setValueAtTime(0.2, now); // Louder volume
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
     osc.stop(now + 0.3);
+  } else if (type === "select") {
+    // Crisp click/pop sound
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.exponentialRampToValueAtTime(300, now + 0.15);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start(now);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+    osc.stop(now + 0.15);
   }
 }
 
