@@ -483,7 +483,7 @@ async function recognizeHandwriting() {
     const analyzedChar = new HanziLookup.AnalyzedCharacter(currentStrokes);
     const matcher = new HanziLookup.Matcher("mmah");
 
-    matcher.match(analyzedChar, 32, (matches) => {
+    matcher.match(analyzedChar, 16, (matches) => {
       matches.forEach((match) => addCandidate(match.character));
     });
   } else if (existingCandidates.size === 0) {
