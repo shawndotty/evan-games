@@ -240,8 +240,25 @@ body.pool-bottom .selection-pool {
     flex-direction: row;
 }
 
-body.pool-bottom.pool-visible .container {
-    padding-bottom: 35vh; /* Space for bottom pool (max-height 30vh) */
+body.pool-bottom .container {
+    padding-bottom: 140px; /* Default fallback */
+}
+
+/* When pool is visible and at bottom, fix game-actions above it */
+body.pool-visible.pool-bottom .container {
+    padding-bottom: calc(var(--pool-height, 0px) + 90px) !important;
+}
+
+body.pool-visible.pool-bottom .game-actions {
+    position: fixed;
+    bottom: calc(var(--pool-height, 0px) + 0px);
+    left: 0;
+    width: 100%;
+    z-index: 999; /* Below pool (1000) but above content */
+    background-color: rgba(253, 245, 230, 0.95);
+    padding: 10px 0;
+    margin-top: 0;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
 }
 
 /* Position: Left */

@@ -649,8 +649,14 @@ function adjustLayout() {
     pool.classList.contains("hidden") ||
     getComputedStyle(pool).display === "none"
   ) {
+    // Reset pool height var when hidden
+    document.documentElement.style.setProperty("--pool-height", "0px");
     return;
   }
+
+  // Calculate pool height including borders/padding
+  const height = pool.offsetHeight;
+  document.documentElement.style.setProperty("--pool-height", height + "px");
 
   if (body.classList.contains("pool-left")) {
     const width = pool.offsetWidth;
