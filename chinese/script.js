@@ -1286,6 +1286,10 @@ function renderPoem() {
   }
 
   updateModeUI();
+
+  // Re-enable check button
+  const checkBtn = document.getElementById("check-btn");
+  if (checkBtn) checkBtn.disabled = false;
 }
 
 // Determine which characters to hide based on difficulty
@@ -1426,7 +1430,11 @@ function checkAnswers() {
   });
 
   const msgArea = document.getElementById("message-area");
+  const checkBtn = document.getElementById("check-btn");
+
   if (allCorrect) {
+    if (checkBtn) checkBtn.disabled = true; // Disable button to prevent multiple clicks
+
     msgArea.textContent = "恭喜你！全部答对了！";
     msgArea.style.color = "var(--success-color)";
 
@@ -1441,6 +1449,14 @@ function checkAnswers() {
         origin: { y: 0.6 },
       });
     }
+
+    // Auto-start new game after delay
+    setTimeout(() => {
+      msgArea.textContent = "即将开始下一首...";
+      setTimeout(() => {
+        startNewGame();
+      }, 1000);
+    }, 3000); // 3 seconds delay for confetti
   } else {
     // Play error sound
     playSound("error");
