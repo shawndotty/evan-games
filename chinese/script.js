@@ -400,6 +400,7 @@ async function recognizeHandwriting() {
     btn.textContent = char;
     btn.addEventListener("click", () => {
       if (lastFocusedInput) {
+        playSound("select");
         lastFocusedInput.value = char;
         // Trigger input logic
         const event = new Event("input", { bubbles: true });
@@ -1031,6 +1032,7 @@ function handleKeydown(e, input) {
     currentMode === "handwriting";
 
   if (e.key === "Delete") {
+    playSound("select");
     if (isReadOnlyMode) {
       e.preventDefault();
       input.value = "";
@@ -1041,6 +1043,7 @@ function handleKeydown(e, input) {
   }
 
   if (e.key === "Backspace") {
+    playSound("select");
     if (isReadOnlyMode) {
       e.preventDefault(); // Prevent browser back navigation
       if (input.value !== "") {
