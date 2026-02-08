@@ -55,19 +55,7 @@
         </div>
       </div>
 
-      <div id="stroke-order-modal" class="modal hidden">
-        <div class="modal-content stroke-modal-content">
-          <div class="modal-header">
-            <h2>笔顺演示</h2>
-            <span class="close-modal close-stroke-modal">&times;</span>
-          </div>
-          <div id="stroke-order-container" class="stroke-order-container"></div>
-          <div id="stroke-text-container" class="stroke-text-container"></div>
-          <div class="stroke-controls">
-            <button id="replay-stroke-btn" class="primary-btn">重播</button>
-          </div>
-        </div>
-      </div>
+
 
       <main id="game-area">
         <div class="game-layout">
@@ -107,6 +95,7 @@
                 <button id="hw-clear-btn" class="secondary-btn">重写</button>
                 <button id="hw-stroke-btn" class="secondary-btn hidden" style="width: auto;">显示笔顺</button>
               </div>
+              <div id="stroke-text-display" class="stroke-text-display hidden"></div>
             </div>
           </div>
         </div>
@@ -124,7 +113,7 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/cnchar/cnchar.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/cnchar-order/cnchar.order.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/cnchar-draw/cnchar.draw.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/gugray/HanziLookupJS@master/dist/hanzilookup.min.js"></script>
     <script src="script.js?v=1.1"></script>
   </body>

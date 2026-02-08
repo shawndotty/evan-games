@@ -927,45 +927,87 @@ function restartCurrentGame() {
 }
 
 function showStrokeOrder(char) {
-  const modal = document.getElementById("stroke-order-modal");
-  if (!modal) return;
-  modal.classList.remove("hidden");
+  const display = document.getElementById("stroke-text-display");
+  if (!display) return;
 
-  const container = document.getElementById("stroke-order-container");
-  const textContainer = document.getElementById("stroke-text-container");
-  if (!container) return;
+  // Toggle visibility if already showing the same character?
+  // For now, let's just show it. If user wants to hide, maybe clicking again?
+  // Let's assume click means "show".
 
-  // Clear previous content
-  container.innerHTML = "";
-  if (textContainer) textContainer.innerHTML = "";
-
-  // Show loading state
-  container.textContent = "正在加载...";
+  display.innerHTML = "";
+  display.classList.remove("hidden");
+  display.style.display = "block";
 
   // Ensure single character
   const targetChar = char.charAt(0);
   if (!isChineseChar(targetChar)) {
-    container.textContent = "非汉字无法显示笔顺";
+    display.textContent = "非汉字无法显示笔顺";
     return;
   }
 
-  // Use requestAnimationFrame to ensure modal is visible and layout is computed
-  requestAnimationFrame(() => {
-    container.innerHTML = ""; // Clear loading text
+  display.textContent = "正在加载...";
 
-    // 1. Try to get text description (Reliable Fallback)
-    if (textContainer && typeof cnchar !== "undefined" && cnchar.stroke) {
+  requestAnimationFrame(() => {
+    display.innerHTML = "";
+
+    // Create Layout
+    const animContainer = document.createElement("div");
+    animContainer.id = "hanzi-anim-target";
+    animContainer.className = "hanzi-anim-target";
+    // Center the animation
+    animContainer.style.margin = "0 auto 15px auto";
+    animContainer.style.width = "200px"; // Fixed size for consistency
+    animContainer.style.height = "200px";
+    animContainer.style.border = "1px solid #ddd";
+    animContainer.style.borderRadius = "4px";
+    animContainer.style.backgroundColor = "#fff";
+
+    display.appendChild(animContainer);
+
+    const textContainer = document.createElement("div");
+    textContainer.className = "stroke-text-list";
+    display.appendChild(textContainer);
+
+    // 1. HanziWriter Animation
+    if (typeof HanziWriter !== "undefined") {
+      try {
+        const writer = HanziWriter.create("hanzi-anim-target", targetChar, {
+          width: 200,
+          height: 200,
+          padding: 5,
+          showOutline: true,
+          strokeAnimationSpeed: 1,
+          delayBetweenStrokes: 200,
+          strokeColor: "#333",
+          radicalColor: "#168F16",
+          onLoadCharDataError: function (reason) {
+            console.error("HanziWriter load error:", reason);
+            animContainer.textContent = "动画加载失败";
+          },
+        });
+        writer.animateLoop();
+      } catch (e) {
+        console.error("HanziWriter init error:", e);
+        animContainer.textContent = "动画初始化失败";
+      }
+    } else {
+      animContainer.textContent = "动画库加载失败";
+    }
+
+    // 2. Text Description (cnchar)
+    if (typeof cnchar !== "undefined" && cnchar.stroke) {
       try {
         // Get stroke names: ['横', '竖', ...]
         const strokeNames = cnchar.stroke(targetChar, "order", "name");
         if (Array.isArray(strokeNames) && strokeNames.length > 0) {
-          let textHtml =
-            '<span class="stroke-text-title">笔顺文字说明：</span>';
+          let textHtml = `<div class="stroke-title">【${targetChar}】的笔顺：</div>`;
+          textHtml += '<div class="stroke-list">';
           textHtml += strokeNames
             .map((name, index) => {
-              return `<span class="stroke-step">${index + 1}.${name}</span>`;
+              return `<div class="stroke-step">${index + 1}. ${name}</div>`;
             })
-            .join("，");
+            .join("");
+          textHtml += "</div>";
           textContainer.innerHTML = textHtml;
         } else {
           textContainer.textContent = "暂无笔顺文字数据";
@@ -975,38 +1017,12 @@ function showStrokeOrder(char) {
         textContainer.textContent = "加载文字说明失败";
       }
     }
-
-    // 2. Try to render animation (Visual)
-    if (typeof cnchar !== "undefined" && cnchar.draw) {
-      try {
-        cnchar.draw(targetChar, {
-          el: container,
-          type: cnchar.draw.TYPE.ANIMATION,
-          style: {
-            length: 4, // border width
-            lineColor: "#333",
-            radicalColor: "#168F16",
-            backgroundColor: "#fff",
-          },
-          animation: {
-            loopAnimate: true,
-            autoAnimate: true, // auto start
-          },
-        });
-      } catch (e) {
-        console.error("cnchar draw error:", e);
-        if (!textContainer || textContainer.innerHTML === "") {
-          container.textContent = "无法加载该字笔顺动画";
-        }
-      }
-    } else {
-      container.textContent = "笔顺库加载失败";
-    }
   });
 }
 
 function updateStrokeBtnVisibility() {
   const btn = document.getElementById("hw-stroke-btn");
+  const display = document.getElementById("stroke-text-display");
   if (!btn) return;
 
   if (
@@ -1019,6 +1035,14 @@ function updateStrokeBtnVisibility() {
   } else {
     btn.classList.add("hidden");
     btn.style.display = "none"; // Ensure hidden
+  }
+
+  // Always hide the display when state updates.
+  // User must click the button again to show it for the current state.
+  if (display && !display.classList.contains("hidden")) {
+    display.classList.add("hidden");
+    display.style.display = "none";
+    display.innerHTML = "";
   }
 }
 
