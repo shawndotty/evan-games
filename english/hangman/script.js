@@ -29,6 +29,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // TTS Voice
   let selectedVoice = null;
 
+  // Timer for auto next game
+  let autoNextGameTimer = null;
+
   // Constants
   const VOWELS = "AEIOU".split("");
   const CONSONANTS = "BCDFGHJKLMNPQRSTVWXYZ".split("");
@@ -179,6 +182,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function startNewGame() {
+    // Clear any pending auto-next game timer
+    if (autoNextGameTimer) {
+      clearTimeout(autoNextGameTimer);
+      autoNextGameTimer = null;
+    }
+
     // 1. Filter words
     filteredWords = filterWords();
 
@@ -345,6 +354,11 @@ document.addEventListener("DOMContentLoaded", () => {
       playWinEffect();
       sounds.win();
       updateHintButton(); // Disable hint
+
+      // Auto start next game after 2 seconds
+      autoNextGameTimer = setTimeout(() => {
+        startNewGame();
+      }, 2000);
     }
   }
 
