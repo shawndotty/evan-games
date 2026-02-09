@@ -26,15 +26,44 @@ document.addEventListener("DOMContentLoaded", () => {
   const hintBtn = document.getElementById("hint-btn");
   const pronounceBtn = document.getElementById("pronounce-btn");
 
+  // TTS Voice
+  let selectedVoice = null;
+
   // Constants
   const VOWELS = "AEIOU".split("");
   const CONSONANTS = "BCDFGHJKLMNPQRSTVWXYZ".split("");
 
   // Initialize
   function init() {
+    loadVoices();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
     createKeyboard();
     addEventListeners();
     startNewGame();
+  }
+
+  function loadVoices() {
+    const voices = window.speechSynthesis.getVoices();
+
+    // Priority:
+    // 1. "Google US English" (Chrome)
+    // 2. "Samantha" (macOS)
+    // 3. Any "en-US"
+    // 4. Any "en"
+
+    selectedVoice =
+      voices.find((v) => v.name === "Google US English") ||
+      voices.find((v) => v.name === "Samantha") ||
+      voices.find((v) => v.lang === "en-US") ||
+      voices.find((v) => v.lang.startsWith("en"));
+
+    console.log(
+      "Selected Voice:",
+      selectedVoice ? selectedVoice.name : "Default",
+    );
   }
 
   function createKeyboard() {
@@ -272,8 +301,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Use Web Speech API
     const utterance = new SpeechSynthesisUtterance(currentWord.toLowerCase());
+
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+
     utterance.lang = "en-US";
-    utterance.rate = 0.8; // Slightly slower for clarity
+    utterance.rate = 0.75; // Optimal for clarity
+    utterance.pitch = 1.0;
+
+    // Cancel any current speaking to avoid queue buildup
+    window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
   }
 
