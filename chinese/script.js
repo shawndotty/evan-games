@@ -2115,10 +2115,12 @@ async function fetchHitokotoData() {
     // Map data
     let contentStr = data.content;
 
-    // Split by punctuation, but attempt to keep punctuation attached to the sentence.
-    // Replace punctuation with punctuation + newline
-    const rawLines = contentStr.replace(/([。？！；])/g, "$1\n").split("\n");
-    let lines = rawLines.map((l) => l.trim()).filter((l) => l.length > 0);
+    // Split by punctuation marks (Chinese and English) and remove them
+    // Common delimiters: ， 。 ？ ！ ； ： 、
+    const lines = contentStr
+      .split(/[，。？！；：、,.?!;:]+/)
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0);
 
     if (lines.length === 0) lines = [contentStr];
 
