@@ -11,6 +11,24 @@ class SoundManager {
     this.pencilGain = null;
     this.pencilFilter = null;
     this.isPencilPlaying = false;
+    this.isMuted = false;
+  }
+
+  toggleMute() {
+    this.isMuted = !this.isMuted;
+    console.log("Toggle Mute:", this.isMuted);
+    
+    // Use currentTime for precise timing and cancelScheduledValues to override any automation
+    const now = this.ctx.currentTime;
+    this.masterGain.gain.cancelScheduledValues(now);
+    
+    if (this.isMuted) {
+      this.masterGain.gain.setValueAtTime(0, now);
+      return true;
+    } else {
+      this.masterGain.gain.setValueAtTime(0.3, now);
+      return false;
+    }
   }
 
   // Initialize on first user interaction to bypass autoplay policy
@@ -21,6 +39,11 @@ class SoundManager {
       }
       this.initialized = true;
     }
+    
+    // Always enforce the current mute state on initialization or re-check
+    const now = this.ctx.currentTime;
+    this.masterGain.gain.cancelScheduledValues(now);
+    this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 0.3, now);
   }
 
   // --- Pencil Sound Effect ---

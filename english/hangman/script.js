@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const gradeSelect = document.getElementById("grade-select");
   const difficultySelect = document.getElementById("difficulty-select");
   const newGameBtn = document.getElementById("new-game-btn");
+  const soundToggleBtn = document.getElementById("sound-toggle-btn");
   const toggleCaseBtn = document.getElementById("toggle-case-btn");
   const hintBtn = document.getElementById("hint-btn");
   const pronounceBtn = document.getElementById("pronounce-btn");
@@ -116,6 +117,21 @@ document.addEventListener("DOMContentLoaded", () => {
       sounds.click();
       startNewGame();
     });
+
+    if (soundToggleBtn) {
+      soundToggleBtn.addEventListener("click", () => {
+        const isMuted = sounds.toggleMute();
+        // Update button text/icon
+        if (isMuted) {
+          soundToggleBtn.textContent = "🔇 Mute";
+          soundToggleBtn.classList.add("muted");
+        } else {
+          soundToggleBtn.textContent = "🔊 Sound";
+          soundToggleBtn.classList.remove("muted");
+          sounds.click(); // Play click only when turning sound ON
+        }
+      });
+    }
 
     toggleCaseBtn.addEventListener("click", () => {
       isUpperCase = !isUpperCase;
