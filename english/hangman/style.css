@@ -289,23 +289,23 @@ canvas {
 
 /* Bottom Control Panel */
 .bottom-panel {
-    margin-top: 0.5rem;
-    padding: 0.5rem;
+    margin-top: 0.8rem;
+    padding: 1.2rem;
     background-color: white;
     border-radius: 1rem;
     box-shadow: 0 6px 0 rgba(0,0,0,0.1);
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.8rem;
     flex-wrap: wrap;
     border: 2px solid #fff;
     flex-shrink: 0;
 }
 
 .action-btn {
-    padding: 0.4rem 0.8rem; /* Reduced padding */
-    font-size: 0.9rem; /* Reduced font */
+    padding: 0.6rem 1.2rem; /* Increased padding */
+    font-size: 1.1rem; /* Increased font */
     font-family: inherit;
     font-weight: bold;
     border: none;
