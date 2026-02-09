@@ -152,8 +152,8 @@ select:hover {
 }
 
 .right-panel {
-    flex: 0 0 22rem; /* Flexible width based on rem */
-    min-width: 200px;
+    flex: 0 0 15rem; /* Reduced width for 3 columns */
+    min-width: 180px;
 }
 
 /* Center Panel Updates */
@@ -190,7 +190,7 @@ h2 {
 
 .consonants-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(3.5rem, 1fr));
+    grid-template-columns: repeat(3, 1fr); /* Fixed 3 columns on desktop */
     gap: 0.5rem;
     width: 100%;
 }
