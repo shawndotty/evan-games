@@ -52,6 +52,12 @@
     cursor: crosshair;
     touch-action: none; /* Prevent scrolling while writing */
     background-size: 100% 100%;
+    
+    /* Responsive Canvas */
+    width: 360px; /* Default width matching HTML */
+    max-width: 100%; /* Scale down on small screens */
+    height: auto; /* Allow height to adjust */
+    aspect-ratio: 1 / 1; /* Maintain square shape */
 }
 
 /* Grid Styles */
@@ -237,4 +243,11 @@ body.mode-handwriting .handwriting-board {
   background-color: #fff;
   border-radius: 4px;
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+@media (max-width: 480px) {
+    .handwriting-board {
+        padding: 10px;
+        width: 98%;
+    }
 }

@@ -8,6 +8,35 @@
     --input-bg: #fff;
 }
 
+/* Responsive Font Scaling */
+html {
+    font-size: 16px;
+}
+
+@media (max-width: 1200px) {
+    html {
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 992px) {
+    html {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 768px) {
+    html {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    html {
+        font-size: 12px;
+    }
+}
+
 body {
     font-family: "Kaiti", "STKaiti", "KaiTi", serif; /* 使用楷体更有古风感 */
     background-color: var(--bg-color);
@@ -612,4 +641,96 @@ body.pool-right .container {
     gap: 20px;
     background-color: rgba(222, 184, 135, 0.2);
     border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+/* --- Mobile & Responsive Improvements --- */
+
+@media (max-width: 768px) {
+    /* Layout Adjustments */
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        padding: 20px 15px;
+        width: 100%;
+        box-shadow: none;
+        background-color: rgba(255, 255, 255, 0.95);
+    }
+
+    h1 {
+        margin-bottom: 15px;
+        line-height: 1.2;
+    }
+
+    /* Controls: Stack vertically or wrap nicely */
+    .controls {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .controls select, 
+    .controls button {
+        flex: 1 1 auto; /* Grow to fill space */
+        min-width: 45%; /* 2 per row approx */
+        padding: 10px;
+        font-size: 1rem;
+    }
+
+    /* Poem Display: Ensure characters are touch-friendly but fit */
+    .poem-container {
+        margin-bottom: 20px;
+        width: 100%;
+    }
+
+    .poem-line {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .char-box, .char-input {
+        /* Slightly larger relative size for touch, but rely on base font scaling */
+        width: 2.2em;
+        height: 2.2em;
+        line-height: 2.2em;
+    }
+
+    /* Game Actions: Touch friendly */
+    .game-actions {
+        padding: 10px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .game-actions button {
+        flex: 1 1 40%;
+        padding: 12px 0;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Small Mobile Specifics */
+    .controls select, 
+    .controls button {
+        min-width: 100%; /* Stack fully on very small screens */
+    }
+
+    .game-actions button {
+        flex: 1 1 100%; /* Stack actions on very small screens */
+    }
+
+    .poem-container {
+        font-size: 1.1rem; /* Reset font size if clamp makes it too small */
+    }
+    
+    .modal-content {
+        width: 95%;
+        height: 90vh;
+    }
+
+    /* Larger touch targets for selection pool on mobile */
+    .pool-char {
+        width: 3em; 
+        height: 3em;
+    }
 }
