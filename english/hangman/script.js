@@ -31,6 +31,10 @@ document.addEventListener("DOMContentLoaded", () => {
   let selectedVoice = null;
   let pronounceClickCount = 0;
 
+  // Audio Cache
+  const audioCache = {};
+  let currentAudio = null;
+
   // Timer for auto next game
   let autoNextGameTimer = null;
 
@@ -315,20 +319,25 @@ document.addEventListener("DOMContentLoaded", () => {
     handleGuess(hintLetter);
   }
 
-  function speakWord() {
+  function stopAllAudio() {
+    // 1. Cancel TTS
+    window.speechSynthesis.cancel();
+
+    // 2. Stop Real Audio if playing
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+      currentAudio = null;
+    }
+  }
+
+  async function speakWord() {
     if (!currentWord) return;
 
-    // Retry loading voices if not selected yet (fix for async loading)
-    if (!selectedVoice) {
-      loadVoices();
-    }
+    // Immediately stop any previous sound to avoid overlap or glitches
+    stopAllAudio();
 
-    // Use Web Speech API
-    const utterance = new SpeechSynthesisUtterance(currentWord.toLowerCase());
-
-    if (selectedVoice) {
-      utterance.voice = selectedVoice;
-    }
+    const lowerWord = currentWord.toLowerCase();
 
     // Rate logic: 1st click normal (1.0), 2nd slow (0.8), 3rd very slow (0.6), 4th normal
     // Adjusted to avoid severe audio distortion at very low rates (which sounds like "mono" or bad quality)
@@ -347,14 +356,94 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentLabel = speedLabels[rates.indexOf(rate)];
     pronounceBtn.textContent = `🔊 ${currentLabel}`;
 
+    console.log(`Speaking '${currentWord}' at rate: ${rate}`);
+
+    // Try to play real human audio first
+    try {
+      await playRealAudio(lowerWord, rate);
+    } catch (e) {
+      console.warn("Real audio failed, falling back to TTS:", e);
+      playTTS(lowerWord, rate);
+    }
+  }
+
+  function playRealAudio(word, rate) {
+    return new Promise(async (resolve, reject) => {
+      let audioUrl = audioCache[word];
+
+      if (!audioUrl) {
+        try {
+          const response = await fetch(
+            `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`,
+          );
+          if (!response.ok) throw new Error("API request failed");
+          const data = await response.json();
+
+          // Find first valid audio URL
+          const phonetics = data[0]?.phonetics || [];
+          const audioEntry = phonetics.find((p) => p.audio && p.audio !== "");
+
+          if (audioEntry) {
+            audioUrl = audioEntry.audio;
+            audioCache[word] = audioUrl; // Cache it
+          } else {
+            throw new Error("No audio found");
+          }
+        } catch (err) {
+          return reject(err);
+        }
+      }
+
+      if (audioUrl) {
+        const audio = new Audio(audioUrl);
+        audio.playbackRate = rate;
+
+        // Update global reference
+        currentAudio = audio;
+
+        audio.onended = () => {
+          if (currentAudio === audio) {
+            currentAudio = null;
+          }
+          resolve();
+        };
+
+        audio.onerror = (e) => {
+          if (currentAudio === audio) {
+            currentAudio = null;
+          }
+          reject(e);
+        };
+
+        // Ensure TTS is cancelled right before play (redundant but safe)
+        window.speechSynthesis.cancel();
+
+        audio.play().catch(reject);
+      } else {
+        reject(new Error("No audio URL"));
+      }
+    });
+  }
+
+  function playTTS(word, rate) {
+    // Retry loading voices if not selected yet (fix for async loading)
+    if (!selectedVoice) {
+      loadVoices();
+    }
+
+    // Use Web Speech API
+    const utterance = new SpeechSynthesisUtterance(word);
+
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+
     // Reset button text after audio finishes (approximate) or keep it?
     // Let's keep it to show state, but reset on new game.
 
     utterance.lang = "en-US";
     utterance.rate = rate;
     utterance.pitch = 1.0;
-
-    console.log(`Speaking '${currentWord}' at rate: ${rate}`);
 
     // Cancel any current speaking to avoid queue buildup
     window.speechSynthesis.cancel();
