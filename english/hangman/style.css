@@ -306,6 +306,8 @@ canvas {
     background-color: #A0E7E5; /* Light teal/blue distinct from others */
     color: var(--text-color);
     box-shadow: 0 4px 0 #7ACBC8;
+    min-width: 180px; /* Fixed width to prevent jumping when text changes */
+    text-align: center;
 }
 
 .pronounce-btn:hover:not(:disabled) {

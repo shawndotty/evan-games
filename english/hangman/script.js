@@ -29,6 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // TTS Voice
   let selectedVoice = null;
+  let pronounceClickCount = 0;
 
   // Timer for auto next game
   let autoNextGameTimer = null;
@@ -214,6 +215,8 @@ document.addEventListener("DOMContentLoaded", () => {
     mistakes = 0;
     guessedLetters.clear();
     gameActive = true;
+    pronounceClickCount = 0; // Reset pronounce speed cycle
+    if (pronounceBtn) pronounceBtn.textContent = "🔊 Pronounce"; // Reset button text
     messageDisplay.textContent = "";
     messageDisplay.className = "hidden";
 
@@ -315,6 +318,11 @@ document.addEventListener("DOMContentLoaded", () => {
   function speakWord() {
     if (!currentWord) return;
 
+    // Retry loading voices if not selected yet (fix for async loading)
+    if (!selectedVoice) {
+      loadVoices();
+    }
+
     // Use Web Speech API
     const utterance = new SpeechSynthesisUtterance(currentWord.toLowerCase());
 
@@ -322,9 +330,31 @@ document.addEventListener("DOMContentLoaded", () => {
       utterance.voice = selectedVoice;
     }
 
+    // Rate logic: 1st click normal (1.0), 2nd slow (0.8), 3rd very slow (0.6), 4th normal
+    // Adjusted to avoid severe audio distortion at very low rates (which sounds like "mono" or bad quality)
+    const rates = [1.0, 0.8, 0.6];
+    const rate = rates[pronounceClickCount % 3];
+    pronounceClickCount++;
+
+    // Reset click count to avoid integer overflow (though unlikely) and keep it clean
+    if (pronounceClickCount >= 3) {
+      pronounceClickCount = 0;
+    }
+
+    // Update button text to show current speed
+    const speedLabels = ["Normal", "Slow", "Slower"];
+    // Note: We display the label corresponding to the rate we JUST chose
+    const currentLabel = speedLabels[rates.indexOf(rate)];
+    pronounceBtn.textContent = `🔊 ${currentLabel}`;
+
+    // Reset button text after audio finishes (approximate) or keep it?
+    // Let's keep it to show state, but reset on new game.
+
     utterance.lang = "en-US";
-    utterance.rate = 0.75; // Optimal for clarity
+    utterance.rate = rate;
     utterance.pitch = 1.0;
+
+    console.log(`Speaking '${currentWord}' at rate: ${rate}`);
 
     // Cancel any current speaking to avoid queue buildup
     window.speechSynthesis.cancel();
