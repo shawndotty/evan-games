@@ -38,6 +38,11 @@ function updatePoemsData(libraryType) {
     newPoems = poemsTang;
   } else if (libraryType === "song300" && typeof poemsSong !== "undefined") {
     newPoems = poemsSong;
+  } else if (libraryType === "hitokoto") {
+    // Hitokoto mode: poems array is not used as source, but we clear it to avoid confusion
+    poems = [];
+    recentPoemIndices = [];
+    return;
   } else if (typeof poemsData !== "undefined") {
     // Fallback for backward compatibility if poemsData exists
     newPoems = poemsData;
@@ -60,13 +65,18 @@ function initGame() {
   if (librarySelect) {
     librarySelect.addEventListener("change", (e) => {
       updatePoemsData(e.target.value);
-      if (poems.length > 0) {
+      // For Hitokoto, poems.length is 0, but we still want to start game
+      if (poems.length > 0 || e.target.value === "hitokoto") {
         startNewGame();
         // Also update search list if modal is open (optional but good UX)
-        // But renderPoemList reads global `poems`, so we just need to re-render if open
         const modal = document.getElementById("poem-picker-modal");
         if (modal && !modal.classList.contains("hidden")) {
-          renderPoemList(document.getElementById("poem-search").value);
+          // If hitokoto, renderPoemList will likely show nothing or be disabled
+          if (e.target.value !== "hitokoto") {
+            renderPoemList(document.getElementById("poem-search").value);
+          } else {
+            closePoemPicker(); // Close picker if switching to hitokoto
+          }
         }
       }
     });
@@ -867,8 +877,44 @@ function handlePoolSelection(char) {
 }
 
 // Start a new round
-function startNewGame() {
-  if (poems.length === 0) return;
+async function startNewGame() {
+  const librarySelect = document.getElementById("library-select");
+  const isHitokoto = librarySelect && librarySelect.value === "hitokoto";
+
+  if (!isHitokoto && poems.length === 0) return;
+
+  if (isHitokoto) {
+    document.getElementById("message-area").textContent = "正在加载一言诗词...";
+    document.getElementById("message-area").style.color = "var(--text-color)";
+    const data = await fetchHitokotoData();
+    if (data) {
+      currentPoem = data;
+      renderPoem();
+      document.getElementById("message-area").textContent = "";
+
+      // Disable pick button
+      const pickBtn = document.getElementById("pick-poem-btn");
+      if (pickBtn) {
+        pickBtn.disabled = true;
+        pickBtn.title = "一言模式下不可选诗";
+        pickBtn.classList.add("disabled");
+      }
+    } else {
+      document.getElementById("message-area").textContent =
+        "加载失败，请检查网络或重试";
+      document.getElementById("message-area").style.color = "red";
+    }
+    lastFocusedInput = null;
+    return;
+  }
+
+  // Re-enable pick button
+  const pickBtn = document.getElementById("pick-poem-btn");
+  if (pickBtn) {
+    pickBtn.disabled = false;
+    pickBtn.title = "";
+    pickBtn.classList.remove("disabled");
+  }
 
   // Calculate safe history limit based on total poems
   // We need at least 1 poem available to pick
@@ -954,6 +1000,13 @@ function startSpecificGame(index) {
 }
 
 function openPoemPicker() {
+  // If hitokoto mode, do nothing or show alert
+  const librarySelect = document.getElementById("library-select");
+  if (librarySelect && librarySelect.value === "hitokoto") {
+    alert("一言模式下无法选择特定诗词");
+    return;
+  }
+
   const modal = document.getElementById("poem-picker-modal");
   if (!modal) return;
 
@@ -2053,4 +2106,32 @@ function showConfirmModal(message, onConfirm) {
 }
 
 // Start
+async function fetchHitokotoData() {
+  try {
+    const response = await fetch("https://v1.jinrishici.com/all.json");
+    if (!response.ok) throw new Error("API request failed");
+    const data = await response.json();
+
+    // Map data
+    let contentStr = data.content;
+
+    // Split by punctuation, but attempt to keep punctuation attached to the sentence.
+    // Replace punctuation with punctuation + newline
+    const rawLines = contentStr.replace(/([。？！；])/g, "$1\n").split("\n");
+    let lines = rawLines.map((l) => l.trim()).filter((l) => l.length > 0);
+
+    if (lines.length === 0) lines = [contentStr];
+
+    return {
+      title: data.origin || "无题",
+      dynasty: data.category ? data.category.split("-")[0] : "",
+      author: data.author || "佚名",
+      content: lines,
+    };
+  } catch (e) {
+    console.error("Hitokoto fetch error:", e);
+    return null;
+  }
+}
+
 loadPoems();
