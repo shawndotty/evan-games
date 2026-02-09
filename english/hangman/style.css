@@ -302,6 +302,20 @@ canvas {
     box-shadow: 0 1px 0 #e1c950;
 }
 
+.pronounce-btn {
+    background-color: #A0E7E5; /* Light teal/blue distinct from others */
+    color: var(--text-color);
+    box-shadow: 0 4px 0 #7ACBC8;
+}
+
+.pronounce-btn:hover:not(:disabled) {
+    background-color: #B4F2F0;
+}
+
+.pronounce-btn:active:not(:disabled) {
+    box-shadow: 0 1px 0 #7ACBC8;
+}
+
 .letter-slot {
     font-size: 3rem;
     width: 3.5rem;

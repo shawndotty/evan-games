@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const newGameBtn = document.getElementById("new-game-btn");
   const toggleCaseBtn = document.getElementById("toggle-case-btn");
   const hintBtn = document.getElementById("hint-btn");
+  const pronounceBtn = document.getElementById("pronounce-btn");
 
   // Constants
   const VOWELS = "AEIOU".split("");
@@ -91,6 +92,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     hintBtn.addEventListener("click", () => {
       useHint();
+    });
+
+    pronounceBtn.addEventListener("click", () => {
+      speakWord();
     });
   }
 
@@ -260,6 +265,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // Simulate guess
     sounds.click(); // Or a special hint sound
     handleGuess(hintLetter);
+  }
+
+  function speakWord() {
+    if (!currentWord) return;
+
+    // Use Web Speech API
+    const utterance = new SpeechSynthesisUtterance(currentWord.toLowerCase());
+    utterance.lang = "en-US";
+    utterance.rate = 0.8; // Slightly slower for clarity
+    window.speechSynthesis.speak(utterance);
   }
 
   function updateHintButton() {
