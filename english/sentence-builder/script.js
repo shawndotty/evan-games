@@ -5,14 +5,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentSentence = "";
   let currentWords = [];
   let blanks = []; // { index, word, element }
-  let currentMode = "input"; // input, select, sort, handwriting
+  let currentMode = "input"; // input, select, sort
   let currentDifficulty = "medium";
   let lastFocusedInput = null;
-
-  // Handwriting State
-  let isWriting = false;
-  let hwContext = null;
-  let lastPoint = null;
 
   // DOM Elements
   const sentenceContent = document.getElementById("sentence-content");
@@ -32,10 +27,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const modal = document.getElementById("topic-modal");
   const closeModal = document.querySelector(".close-modal");
   const topicList = document.getElementById("topic-list");
-  const hwContainer = document.getElementById("handwriting-container");
-  const hwCanvas = document.getElementById("handwriting-canvas");
-  const hwClearBtn = document.getElementById("hw-clear-btn");
-  const hwConfirmBtn = document.getElementById("hw-recognize-btn");
 
   // Init
   initGame();
@@ -43,7 +34,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function initGame() {
     initTopicSelect();
     initEventListeners();
-    initHandwriting();
     startNewGame();
   }
 
@@ -90,76 +80,6 @@ document.addEventListener("DOMContentLoaded", () => {
     modal.addEventListener("click", (e) => {
       if (e.target === modal) modal.classList.add("hidden");
     });
-
-    // Handwriting specific
-    hwClearBtn.addEventListener("click", clearHandwriting);
-    hwConfirmBtn.addEventListener("click", confirmHandwriting);
-  }
-
-  function initHandwriting() {
-    if (!hwCanvas) return;
-    hwContext = hwCanvas.getContext("2d");
-    hwContext.lineWidth = 3;
-    hwContext.lineCap = "round";
-    hwContext.strokeStyle = "#000";
-
-    const start = (e) => {
-      isWriting = true;
-      const rect = hwCanvas.getBoundingClientRect();
-      const x = (e.clientX || e.touches[0].clientX) - rect.left;
-      const y = (e.clientY || e.touches[0].clientY) - rect.top;
-      lastPoint = { x, y };
-      hwContext.beginPath();
-      hwContext.moveTo(x, y);
-    };
-
-    const move = (e) => {
-      if (!isWriting) return;
-      e.preventDefault();
-      const rect = hwCanvas.getBoundingClientRect();
-      const x = (e.clientX || e.touches[0].clientX) - rect.left;
-      const y = (e.clientY || e.touches[0].clientY) - rect.top;
-      hwContext.lineTo(x, y);
-      hwContext.stroke();
-      lastPoint = { x, y };
-    };
-
-    const end = () => {
-      isWriting = false;
-      hwContext.closePath();
-    };
-
-    hwCanvas.addEventListener("mousedown", start);
-    hwCanvas.addEventListener("mousemove", move);
-    hwCanvas.addEventListener("mouseup", end);
-    hwCanvas.addEventListener("mouseout", end);
-
-    hwCanvas.addEventListener("touchstart", start, { passive: false });
-    hwCanvas.addEventListener("touchmove", move, { passive: false });
-    hwCanvas.addEventListener("touchend", end);
-  }
-
-  function clearHandwriting() {
-    hwContext.clearRect(0, 0, hwCanvas.width, hwCanvas.height);
-  }
-
-  function confirmHandwriting() {
-    // Since we don't have a reliable English OCR library embedded,
-    // we use this as a "scratchpad".
-    // Or we could try basic shape matching if we had templates, but that's complex.
-    // For now, this button just clears the canvas and focuses the input to let the user type
-    // effectively using it as "practice writing then type".
-    // Alternatively, if we really want to simulate "Input", we could just say "Good job" and clear.
-
-    // Better UX: Show message "Now type what you wrote!"
-    const msg = document.getElementById("hw-candidates");
-    if (msg) msg.textContent = "Great writing! Now type it in the box.";
-
-    setTimeout(() => {
-      if (lastFocusedInput) lastFocusedInput.focus();
-      if (msg) msg.textContent = "";
-      clearHandwriting();
-    }, 1500);
   }
 
   function startNewGame() {
@@ -194,7 +114,6 @@ document.addEventListener("DOMContentLoaded", () => {
     lastFocusedInput = null; // Reset focused input
     messageArea.textContent = "";
     pool.classList.add("hidden");
-    hwContainer.classList.add("hidden");
     checkBtn.disabled = false; // Reset button state
 
     // Remove punctuation for tokenization but keep for display?
@@ -373,9 +292,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         input.addEventListener("focus", () => {
           lastFocusedInput = input;
-          if (currentMode === "handwriting") {
-            hwContainer.classList.remove("hidden");
-          }
         });
 
         if (currentMode === "select") {
@@ -385,8 +301,6 @@ document.addEventListener("DOMContentLoaded", () => {
             lastFocusedInput = input;
             // Trigger pool highlight if needed
           });
-        } else if (currentMode === "handwriting") {
-          input.readOnly = true; // Force write
         }
 
         line.appendChild(input);
@@ -526,7 +440,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (isWin) {
       messageArea.textContent = "Correct! Well done!";
       messageArea.style.color = "var(--success-color)";
-      
+
       checkBtn.disabled = true;
 
       // Auto-advance
