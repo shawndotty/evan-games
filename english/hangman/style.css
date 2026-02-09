@@ -316,6 +316,20 @@ canvas {
     box-shadow: 0 1px 0 #7ACBC8;
 }
 
+.vowels-btn {
+    background-color: #FFA07A; /* Light Salmon */
+    color: var(--text-color);
+    box-shadow: 0 4px 0 #E9967A;
+}
+
+.vowels-btn:hover:not(:disabled) {
+    background-color: #FFB69B;
+}
+
+.vowels-btn:active:not(:disabled) {
+    box-shadow: 0 1px 0 #E9967A;
+}
+
 .letter-slot {
     font-size: 3rem;
     width: 3.5rem;

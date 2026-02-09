@@ -25,6 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const toggleCaseBtn = document.getElementById("toggle-case-btn");
   const hintBtn = document.getElementById("hint-btn");
   const pronounceBtn = document.getElementById("pronounce-btn");
+  const revealVowelsBtn = document.getElementById("reveal-vowels-btn");
 
   // TTS Voice
   let selectedVoice = null;
@@ -129,6 +130,10 @@ document.addEventListener("DOMContentLoaded", () => {
     pronounceBtn.addEventListener("click", () => {
       speakWord();
     });
+
+    revealVowelsBtn.addEventListener("click", () => {
+      revealVowels();
+    });
   }
 
   function restoreKeyboardStatus() {
@@ -217,6 +222,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderWord();
     drawHangman(0); // Draw initial state (Gallows)
     updateHintButton(); // Check hint status for new word
+    updateVowelsButton(); // Reset vowel button state
   }
 
   function resetKeyboard() {
@@ -279,6 +285,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Update hint button status
     updateHintButton();
+    updateVowelsButton();
   }
 
   function useHint() {
@@ -324,6 +331,45 @@ document.addEventListener("DOMContentLoaded", () => {
     window.speechSynthesis.speak(utterance);
   }
 
+  function revealVowels() {
+    if (!gameActive) return;
+
+    sounds.click();
+
+    // Identify vowels present in the current word that haven't been guessed
+    const letters = currentWord.split("");
+    const presentVowels = [
+      ...new Set(
+        letters.filter((l) => VOWELS.includes(l) && !guessedLetters.has(l)),
+      ),
+    ];
+
+    if (presentVowels.length === 0) {
+      // Maybe all vowels are already guessed or no vowels in word?
+      // Just in case, though button should be disabled.
+      return;
+    }
+
+    presentVowels.forEach((vowel) => {
+      handleGuess(vowel);
+    });
+  }
+
+  function updateVowelsButton() {
+    if (!gameActive) {
+      revealVowelsBtn.disabled = true;
+      return;
+    }
+
+    // Check if there are any unrevealed vowels in the current word
+    const letters = currentWord.split("");
+    const hasUnrevealedVowels = letters.some(
+      (l) => VOWELS.includes(l) && !guessedLetters.has(l),
+    );
+
+    revealVowelsBtn.disabled = !hasUnrevealedVowels;
+  }
+
   function updateHintButton() {
     if (!gameActive) {
       hintBtn.disabled = true;
@@ -354,6 +400,7 @@ document.addEventListener("DOMContentLoaded", () => {
       playWinEffect();
       sounds.win();
       updateHintButton(); // Disable hint
+      updateVowelsButton(); // Disable vowels button
 
       // Auto start next game after 2 seconds
       autoNextGameTimer = setTimeout(() => {
@@ -371,6 +418,7 @@ document.addEventListener("DOMContentLoaded", () => {
       renderWord(true); // Reveal answer
       sounds.lose();
       updateHintButton(); // Disable hint
+      updateVowelsButton(); // Disable vowels button
     }
   }
 
