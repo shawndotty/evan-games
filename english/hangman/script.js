@@ -26,6 +26,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const hintBtn = document.getElementById("hint-btn");
   const pronounceBtn = document.getElementById("pronounce-btn");
   const revealVowelsBtn = document.getElementById("reveal-vowels-btn");
+  const synonymBtn = document.getElementById("synonym-btn");
+  const synonymDisplay = document.getElementById("synonym-display");
 
   // Explain Modal Elements
   const explainBtn = document.getElementById("explain-btn");
@@ -148,6 +150,10 @@ document.addEventListener("DOMContentLoaded", () => {
       revealVowels();
     });
 
+    synonymBtn.addEventListener("click", () => {
+      showSynonyms();
+    });
+
     // Explain Modal Listeners
     if (explainBtn) {
       explainBtn.addEventListener("click", () => {
@@ -258,8 +264,36 @@ document.addEventListener("DOMContentLoaded", () => {
     updateHintButton(); // Check hint status for new word
     updateVowelsButton(); // Reset vowel button state
 
+    // Reset Synonym Display
+    synonymDisplay.textContent = "";
+    synonymDisplay.classList.add("hidden");
+    if (synonymBtn) synonymBtn.disabled = false;
+
     // Enable Explain button by default
     if (explainBtn) explainBtn.disabled = false;
+  }
+
+  async function showSynonyms() {
+    synonymDisplay.textContent = "Loading synonyms...";
+    synonymDisplay.classList.remove("hidden");
+
+    try {
+      // Use Datamuse API to find synonyms (rel_syn)
+      const response = await fetch(
+        `https://api.datamuse.com/words?rel_syn=${currentWord.toLowerCase()}&max=3`,
+      );
+      const data = await response.json();
+
+      if (data && data.length > 0) {
+        const synonyms = data.map((item) => item.word).join(", ");
+        synonymDisplay.textContent = `Synonyms: ${synonyms}`;
+      } else {
+        synonymDisplay.textContent = "No synonyms found.";
+      }
+    } catch (error) {
+      console.error("Error fetching synonyms:", error);
+      synonymDisplay.textContent = "Could not load synonyms (Network Error).";
+    }
   }
 
   function resetKeyboard() {

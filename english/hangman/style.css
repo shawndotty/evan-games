@@ -203,7 +203,7 @@ h2 {
     background-color: var(--accent-color);
     border: none;
     border-radius: 0.8rem;
-    font-size: 1.5rem; /* Reduced from 2rem */
+    font-size: 2rem; /* Reduced from 2rem */
     font-weight: bold;
     color: var(--text-color);
     cursor: pointer;
@@ -275,6 +275,16 @@ canvas {
     justify-content: center;
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
+}
+
+.synonym-container {
+    margin-top: 0.5rem;
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    font-style: italic;
+    min-height: 1.5rem;
+    text-align: center;
+    width: 100%;
 }
 
 /* Bottom Control Panel */
@@ -384,6 +394,21 @@ canvas {
 
 .explain-btn:active:not(:disabled) {
     box-shadow: 0 1px 0 #8A4ECA;
+}
+
+/* Synonym Button */
+.synonym-btn {
+    background-color: #2ECC71; /* Emerald Green */
+    color: white;
+    box-shadow: 0 4px 0 #27AE60;
+}
+
+.synonym-btn:hover:not(:disabled) {
+    background-color: #58D68D;
+}
+
+.synonym-btn:active:not(:disabled) {
+    box-shadow: 0 1px 0 #27AE60;
 }
 
 .letter-slot {
