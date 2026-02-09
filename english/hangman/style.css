@@ -226,8 +226,11 @@ h2 {
 }
 
 canvas {
-    max-width: 100%;
+    width: 100%;
+    max-width: 600px;
     height: auto;
+    max-height: 50vh; /* Limit height on smaller vertical screens */
+    object-fit: contain;
 }
 
 /* Word Container moved to center */
