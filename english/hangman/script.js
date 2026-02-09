@@ -27,6 +27,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const pronounceBtn = document.getElementById("pronounce-btn");
   const revealVowelsBtn = document.getElementById("reveal-vowels-btn");
 
+  // Explain Modal Elements
+  const explainBtn = document.getElementById("explain-btn");
+  const modal = document.getElementById("explain-modal");
+  const closeModalBtn = document.getElementById("close-modal-btn");
+  const modalOverlay = document.querySelector(".modal-overlay");
+  const modalWord = document.getElementById("modal-word");
+  const modalDefinition = document.getElementById("modal-definition");
+
   // TTS Voice
   let selectedVoice = null;
   let pronounceClickCount = 0;
@@ -139,6 +147,25 @@ document.addEventListener("DOMContentLoaded", () => {
     revealVowelsBtn.addEventListener("click", () => {
       revealVowels();
     });
+
+    // Explain Modal Listeners
+    if (explainBtn) {
+      explainBtn.addEventListener("click", () => {
+        openExplainModal();
+      });
+    }
+
+    if (closeModalBtn) {
+      closeModalBtn.addEventListener("click", () => {
+        closeExplainModal();
+      });
+    }
+
+    if (modalOverlay) {
+      modalOverlay.addEventListener("click", () => {
+        closeExplainModal();
+      });
+    }
   }
 
   function restoreKeyboardStatus() {
@@ -230,6 +257,9 @@ document.addEventListener("DOMContentLoaded", () => {
     drawHangman(0); // Draw initial state (Gallows)
     updateHintButton(); // Check hint status for new word
     updateVowelsButton(); // Reset vowel button state
+
+    // Enable Explain button by default
+    if (explainBtn) explainBtn.disabled = false;
   }
 
   function resetKeyboard() {
@@ -521,6 +551,8 @@ document.addEventListener("DOMContentLoaded", () => {
       updateHintButton(); // Disable hint
       updateVowelsButton(); // Disable vowels button
 
+      // Note: Explain button remains enabled
+
       // Auto start next game after 2 seconds
       autoNextGameTimer = setTimeout(() => {
         startNewGame();
@@ -538,6 +570,7 @@ document.addEventListener("DOMContentLoaded", () => {
       sounds.lose();
       updateHintButton(); // Disable hint
       updateVowelsButton(); // Disable vowels button
+      // Note: Explain button remains disabled on loss as per user request
     }
   }
 
@@ -703,6 +736,71 @@ document.addEventListener("DOMContentLoaded", () => {
     ctx.lineTo(404, 162);
     ctx.stroke();
     ctx.lineWidth = 8; // Restore
+  }
+
+  // --- Explain Feature ---
+
+  function openExplainModal() {
+    if (!currentWord) return;
+
+    modal.classList.remove("hidden");
+
+    // Hide the word itself, just show "Definition Hint" or similar
+    modalWord.textContent = "Word Definition";
+    modalDefinition.textContent = "Loading definition...";
+
+    fetchDefinition(currentWord.toLowerCase());
+  }
+
+  function closeExplainModal() {
+    modal.classList.add("hidden");
+  }
+
+  async function fetchDefinition(word) {
+    try {
+      const response = await fetch(
+        `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`,
+      );
+      if (!response.ok) throw new Error("Word not found");
+      const data = await response.json();
+
+      // Extract first definition
+      if (
+        data &&
+        data.length > 0 &&
+        data[0].meanings &&
+        data[0].meanings.length > 0
+      ) {
+        // Try to find a noun or verb definition first as they are most common for kids words
+        let meaning =
+          data[0].meanings.find(
+            (m) => m.partOfSpeech === "noun" || m.partOfSpeech === "verb",
+          ) || data[0].meanings[0];
+
+        const firstDef = meaning.definitions[0].definition;
+        modalDefinition.textContent = firstDef;
+      } else {
+        modalDefinition.textContent = "No definition found.";
+      }
+    } catch (error) {
+      console.error("Definition error:", error);
+      modalDefinition.textContent = "Could not load definition.";
+    }
+  }
+
+  function fetchImage(word) {
+    // Use Pollinations.ai with a kid-friendly prompt
+    const prompt = `cute illustration of ${word} for kids, simple, colorful, vector style, white background`;
+    const encodedPrompt = encodeURIComponent(prompt);
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=400&height=400&nologo=true`;
+
+    modalImage.src = imageUrl;
+    modalImage.onload = () => {
+      modalImage.classList.remove("hidden");
+    };
+    modalImage.onerror = () => {
+      modalImage.classList.add("hidden");
+    };
   }
 
   // Start

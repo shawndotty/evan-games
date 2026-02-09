@@ -78,9 +78,24 @@
         <footer class="bottom-panel">
             <button id="toggle-case-btn" class="action-btn">Aa Toggle Case</button>
             <button id="pronounce-btn" class="action-btn pronounce-btn">🔊 Pronounce</button>
+            <button id="explain-btn" class="action-btn explain-btn">📖 Explain</button>
             <button id="reveal-vowels-btn" class="action-btn vowels-btn">🅰️ Reveal Vowels</button>
             <button id="hint-btn" class="action-btn hint-btn">💡 Hint</button>
         </footer>
+    </div>
+
+    <div id="explain-modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <button id="close-modal-btn" class="close-btn">&times;</button>
+            <h2 id="modal-word"></h2>
+            <div class="modal-body">
+            <div class="modal-text">
+              <h3>Definition:</h3>
+              <p id="modal-definition">Loading...</p>
+            </div>
+          </div>
+        </div>
     </div>
 
     <script src="data.js"></script>
