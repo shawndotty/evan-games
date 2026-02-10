@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentMode = "input"; // input, select, sort
   let currentDifficulty = "medium";
   let lastFocusedInput = null;
+  const soundManager = new SoundManager();
 
   // DOM Elements
   const sentenceContent = document.getElementById("sentence-content");
@@ -23,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const hintBtn = document.getElementById("hint-btn");
   const hintSentenceBtn = document.getElementById("hint-sentence-btn");
   const restartBtn = document.getElementById("restart-btn");
+  const soundToggleBtn = document.getElementById("sound-toggle-btn");
   const pickTopicBtn = document.getElementById("pick-topic-btn");
   const modal = document.getElementById("topic-modal");
   const closeModal = document.querySelector(".close-modal");
@@ -53,6 +55,12 @@ document.addEventListener("DOMContentLoaded", () => {
     hintBtn.addEventListener("click", showHintWord);
     hintSentenceBtn.addEventListener("click", showHintSentence);
     restartBtn.addEventListener("click", resetCurrentGame);
+
+    soundToggleBtn.addEventListener("click", () => {
+      const isMuted = soundManager.toggleMute();
+      soundToggleBtn.textContent = isMuted ? "🔇 Sound" : "🔊 Sound";
+      soundManager.click();
+    });
 
     modeSelect.addEventListener("change", (e) => {
       currentMode = e.target.value;
@@ -180,6 +188,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function handleSortClick(e) {
     const target = e.target;
     if (selectedSortWord) {
+      soundManager.click();
       // Swap text
       const temp = selectedSortWord.textContent;
       selectedSortWord.textContent = target.textContent;
@@ -188,6 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
       selectedSortWord.classList.remove("selected");
       selectedSortWord = null;
     } else {
+      soundManager.click();
       selectedSortWord = target;
       target.classList.add("selected");
     }
@@ -211,6 +221,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function handleDrop(e) {
     if (e.stopPropagation) e.stopPropagation();
     if (dragSrcEl !== this) {
+      soundManager.click();
       // Swap content
       const temp = this.textContent;
       this.textContent = dragSrcEl.textContent;
@@ -357,6 +368,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function handlePoolSelect(word, btn) {
     if (btn.classList.contains("muted")) return;
 
+    soundManager.click();
+
     if (!lastFocusedInput) {
       // Find first empty
       lastFocusedInput = blanks.find((b) => !b.element.value)?.element;
@@ -438,6 +451,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (isWin) {
+      soundManager.win();
       messageArea.textContent = "Correct! Well done!";
       messageArea.style.color = "var(--success-color)";
 
@@ -449,12 +463,14 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => startNewGame(), 1000);
       }, 2000);
     } else {
+      soundManager.wrong();
       messageArea.textContent = "Some errors found. Keep trying!";
       messageArea.style.color = "var(--error-color)";
     }
   }
 
   function showHintWord() {
+    soundManager.click();
     if (currentMode === "sort") return; // No word hint for sort, user sees all
 
     // Find first empty or incorrect
@@ -471,6 +487,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function showHintSentence() {
+    soundManager.click();
     if (currentMode === "sort") {
       // Sort mode hint: just fix everything? Or one swap?
       // Let's fix everything for simplicity or just show alert
@@ -490,6 +507,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function resetCurrentGame() {
+    soundManager.click();
     renderSentence();
     checkBtn.disabled = false;
   }
