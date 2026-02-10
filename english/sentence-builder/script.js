@@ -30,6 +30,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const closeModal = document.querySelector(".close-modal");
   const topicList = document.getElementById("topic-list");
 
+  // Message Modal Elements
+  const msgModal = document.getElementById("message-modal");
+  const msgModalTitle = document.getElementById("msg-modal-title");
+  const msgModalBody = document.getElementById("msg-modal-body");
+  const closeMsgModal = document.querySelector(".close-msg-modal");
+  const msgModalOk = document.getElementById("msg-modal-ok");
+
   // Init
   initGame();
 
@@ -87,6 +94,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     modal.addEventListener("click", (e) => {
       if (e.target === modal) modal.classList.add("hidden");
+    });
+
+    // Message Modal Listeners
+    closeMsgModal.addEventListener("click", () => {
+      msgModal.classList.add("hidden");
+    });
+
+    msgModalOk.addEventListener("click", () => {
+      msgModal.classList.add("hidden");
+    });
+
+    msgModal.addEventListener("click", (e) => {
+      if (e.target === msgModal) msgModal.classList.add("hidden");
     });
   }
 
@@ -312,6 +332,29 @@ document.addEventListener("DOMContentLoaded", () => {
             lastFocusedInput = input;
             // Trigger pool highlight if needed
           });
+
+          // Handle Backspace/Delete
+          input.addEventListener("keydown", (e) => {
+            if (e.key === "Backspace" || e.key === "Delete") {
+              e.preventDefault();
+
+              if (input.value) {
+                // Clear current value
+                if (input.poolBtn) {
+                  input.poolBtn.classList.remove("muted");
+                  input.poolBtn = null;
+                }
+                input.value = "";
+                input.classList.remove("correct", "incorrect");
+              } else if (e.key === "Backspace") {
+                // Move to previous input if current is empty
+                const idx = blanks.findIndex((b) => b.element === input);
+                if (idx > 0) {
+                  blanks[idx - 1].element.focus();
+                }
+              }
+            }
+          });
         }
 
         line.appendChild(input);
@@ -489,11 +532,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function showHintSentence() {
     soundManager.click();
     if (currentMode === "sort") {
-      // Sort mode hint: just fix everything? Or one swap?
-      // Let's fix everything for simplicity or just show alert
-      renderSortMode(currentSentence.split(" ")); // Reset to correct order? No that's cheating.
-      // Let's just alert the sentence
-      alert(currentSentence);
+      // Show correct sentence in custom modal
+      msgModalTitle.textContent = "Correct Order";
+      msgModalBody.textContent = currentSentence;
+      msgModal.classList.remove("hidden");
       return;
     }
 

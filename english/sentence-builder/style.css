@@ -424,13 +424,21 @@ button:disabled {
     color: var(--text-color);
 }
 
-.close-modal {
+.close-modal, .close-msg-modal {
     background: none;
     border: none;
     font-size: 1.5rem;
     color: #6b7280;
     cursor: pointer;
     padding: 0;
+}
+
+.modal-footer {
+    padding: 20px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    background-color: #f9fafb;
 }
 
 .modal-body {

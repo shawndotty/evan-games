@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>English Sentence Builder</title>
-    <link rel="stylesheet" href="style.css?version=1.0.4">
+    <link rel="stylesheet" href="style.css?version=1.0.5">
 </head>
 <body>
     <div class="container">
@@ -73,9 +73,25 @@
         </div>
     </div>
 
+    <!-- Message Modal -->
+    <div id="message-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="msg-modal-title">Hint</h2>
+                <button class="close-msg-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="msg-modal-body" style="font-size: 1.2rem; line-height: 1.6;"></p>
+            </div>
+            <div class="modal-footer">
+                <button id="msg-modal-ok" class="primary-btn">OK</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="data.js"></script>
     <script src="sounds.js"></script>
-    <script src="script.js?version=1.0.4"></script>
+    <script src="script.js?version=1.0.5"></script>
 </body>
 </html>
