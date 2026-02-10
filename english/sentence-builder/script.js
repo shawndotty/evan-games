@@ -319,7 +319,10 @@ document.addEventListener("DOMContentLoaded", () => {
         input.dataset.full = word;
 
         // Width based on length + padding
-        input.style.width = `${Math.max(80, core.length * 14 + 20)}px`;
+        // Font is 1.1rem (~17.6px). Padding is 40px total.
+        // We need enough space for text + padding + buffer.
+        // Using a generous multiplier (22px per char) to handle wide characters (w, m) and wrong answers.
+        input.style.width = `${Math.max(80, core.length * 22 + 55)}px`;
 
         input.addEventListener("focus", () => {
           lastFocusedInput = input;
