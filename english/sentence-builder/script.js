@@ -321,8 +321,14 @@ document.addEventListener("DOMContentLoaded", () => {
         // Width based on length + padding
         // Font is 1.1rem (~17.6px). Padding is 40px total.
         // We need enough space for text + padding + buffer.
-        // Using a generous multiplier (22px per char) to handle wide characters (w, m) and wrong answers.
-        input.style.width = `${Math.max(80, core.length * 22 + 55)}px`;
+        // Using a balanced multiplier (13px per char) + 45px buffer.
+        const dynamicWidth = `${Math.max(50, core.length * 13 + 45)}px`;
+
+        if (currentMode === "select") {
+          input.style.width = "90px"; // Fixed initial width for select mode
+        } else {
+          input.style.width = dynamicWidth;
+        }
 
         input.addEventListener("focus", () => {
           lastFocusedInput = input;
@@ -348,6 +354,7 @@ document.addEventListener("DOMContentLoaded", () => {
                   input.poolBtn = null;
                 }
                 input.value = "";
+                input.style.width = "90px"; // Reset to fixed width
                 input.classList.remove("correct", "incorrect");
               } else if (e.key === "Backspace") {
                 // Move to previous input if current is empty
@@ -430,6 +437,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       lastFocusedInput.value = word;
+      // Update width to fit the selected word
+      lastFocusedInput.style.width = `${Math.max(50, word.length * 13 + 45)}px`;
+
       lastFocusedInput.classList.remove("incorrect");
       lastFocusedInput.classList.remove("correct");
 
@@ -527,6 +537,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (target) {
       target.element.value = target.correct;
+      target.element.style.width = `${Math.max(50, target.correct.length * 13 + 45)}px`;
       target.element.classList.add("correct");
       target.element.classList.remove("incorrect");
     }
@@ -544,6 +555,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     blanks.forEach((b) => {
       b.element.value = b.correct;
+      b.element.style.width = `${Math.max(50, b.correct.length * 13 + 45)}px`;
       b.element.classList.add("correct");
       b.element.classList.remove("incorrect");
     });

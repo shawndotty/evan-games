@@ -188,7 +188,7 @@ button:disabled {
 
 .word-input {
     height: 48px;
-    min-width: 80px;
+    min-width: 50px;
     padding: 0 20px;
     font-size: 1.1rem; /* input font size needs to be readable */
     text-align: center;
